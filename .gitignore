@@ -1,0 +1,4 @@
+KCDModMerger/obj/**
+.vs/**
+packages/**
+KCDModMerger/bin/Debug/**
