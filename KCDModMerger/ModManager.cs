@@ -27,7 +27,7 @@ namespace KCDModMerger
         internal readonly List<string> Conflicts = new List<string>();
         private const string TEMP_FILES = "\\TempFiles";
         private const string TEMP_MERGED_DIR = "\\MergedFiles";
-        private const string MODMANAGER_DIR = "\\ModManager";
+        private const string MODMANAGER_DIR = "\\ModMerger";
 
         public ModManager()
         {
