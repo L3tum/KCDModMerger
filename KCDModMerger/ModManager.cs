@@ -88,7 +88,7 @@ namespace KCDModMerger
 
         public void CopyMergedToMods()
         {
-            var rootDir = Settings.Default.KCDPath + "\\Mods\\ModMerger";
+            var rootDir = Settings.Default.KCDPath + "\\Mods\\zzz_ModMerger";
             if (Directory.Exists(rootDir))
             {
                 try
