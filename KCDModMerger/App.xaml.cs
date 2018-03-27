@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using KCDModMerger.Properties;
 
 namespace KCDModMerger
 {
@@ -14,5 +15,11 @@ namespace KCDModMerger
     /// </summary>
     public partial class App : Application
     {
+        public App()
+        {
+#if DEBUG
+            Settings.Default.Reset();
+#endif
+        }
     }
 }

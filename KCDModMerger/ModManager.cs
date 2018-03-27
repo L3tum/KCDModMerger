@@ -479,42 +479,45 @@ namespace KCDModMerger
 
         private void ScanDataDir()
         {
-            var files = Directory.GetFiles(Settings.Default.KCDPath + "\\Data", "zzz*.pak");
-
-            foreach (var file in files)
+            if (Directory.Exists(Settings.Default.KCDPath + "\\Data"))
             {
-                var fileName = file.Split('\\').Last();
-                var name = fileName.Replace("zzz_", "").Replace("zzz", "").Replace(".pak", "");
-                var rootDir = Settings.Default.KCDPath + "\\Mods\\" + name;
+                var files = Directory.GetFiles(Settings.Default.KCDPath + "\\Data", "zzz*.pak");
 
-                if (Directory.Exists(rootDir))
+                foreach (var file in files)
                 {
-                    rootDir += "_extracted";
-                }
+                    var fileName = file.Split('\\').Last();
+                    var name = fileName.Replace("zzz_", "").Replace("zzz", "").Replace(".pak", "");
+                    var rootDir = Settings.Default.KCDPath + "\\Mods\\" + name;
 
-                var dir = Directory.CreateDirectory(rootDir);
-                dir.CreateSubdirectory("Data");
-                dir.CreateSubdirectory("Localization");
+                    if (Directory.Exists(rootDir))
+                    {
+                        rootDir += "_extracted";
+                    }
 
-                using (XmlWriter xml = XmlWriter.Create(rootDir + "\\mod.manifest"))
-                {
-                    xml.WriteStartDocument();
-                    xml.WriteStartElement("kcd_mod");
-                    xml.WriteStartElement("info");
-                    xml.WriteElementString("name", name);
-                    xml.WriteElementString("description", "Extracted by KCDModMerger");
-                    xml.WriteElementString("author", "KCDModMerger");
-                    xml.WriteElementString("version", VERSION);
-                    xml.WriteElementString("created_on", DateTime.Now.ToString());
-                    xml.WriteEndElement();
-                    xml.WriteEndElement();
-                    xml.WriteEndDocument();
-                }
+                    var dir = Directory.CreateDirectory(rootDir);
+                    dir.CreateSubdirectory("Data");
+                    dir.CreateSubdirectory("Localization");
 
-                File.Copy(file, rootDir + "\\Data\\" + fileName);
-                if (File.Exists(rootDir + "\\Data\\" + fileName))
-                {
-                    File.Delete(file);
+                    using (XmlWriter xml = XmlWriter.Create(rootDir + "\\mod.manifest"))
+                    {
+                        xml.WriteStartDocument();
+                        xml.WriteStartElement("kcd_mod");
+                        xml.WriteStartElement("info");
+                        xml.WriteElementString("name", name);
+                        xml.WriteElementString("description", "Extracted by KCDModMerger");
+                        xml.WriteElementString("author", "KCDModMerger");
+                        xml.WriteElementString("version", VERSION);
+                        xml.WriteElementString("created_on", DateTime.Now.ToString());
+                        xml.WriteEndElement();
+                        xml.WriteEndElement();
+                        xml.WriteEndDocument();
+                    }
+
+                    File.Copy(file, rootDir + "\\Data\\" + fileName);
+                    if (File.Exists(rootDir + "\\Data\\" + fileName))
+                    {
+                        File.Delete(file);
+                    }
                 }
             }
         }
@@ -559,6 +562,8 @@ namespace KCDModMerger
         private string[] GetFolders(string path)
         {
             if (Directory.Exists(path)) return Directory.GetDirectories(path);
+
+            MessageBox.Show("There is no Mods Directory!");
 
             return new List<string>().ToArray();
         }

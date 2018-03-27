@@ -27,7 +27,7 @@ namespace KCDModMerger
     {
         private readonly ObservableCollection<string> files = new ObservableCollection<string>();
         private readonly ObservableCollection<string> modNames = new ObservableCollection<string>();
-        private readonly Dictionary<string, List<ModFile>> conflicts;
+        private Dictionary<string, List<ModFile>> conflicts;
         private readonly BackgroundWorker worker = new BackgroundWorker();
         private ModManager ModMana { get; } = new ModManager();
         private bool isMerging = false;
@@ -135,9 +135,9 @@ namespace KCDModMerger
             var count = 3;
             var done = 0;
 
-            foreach (KeyValuePair<string, List<ModFile>> keyValuePair in conflicts)
+            foreach (KeyValuePair<string, List<ModFile>> conflict in conflicts)
             {
-                count += keyValuePair.Value.Count;
+                count += conflict.Value.Count;
             }
 
             worker.ReportProgress(0);
@@ -263,6 +263,49 @@ namespace KCDModMerger
         {
             ModNames = ModMana.ModNames;
             Files = ModMana.Conflicts;
+
+            foreach (string selectedFile in files)
+            {
+                var modF = ModMana.ModFiles.Where((file => file.FileName.Equals(selectedFile)));
+
+                if (!conflicts.ContainsKey(selectedFile))
+                {
+                    conflicts.Add(selectedFile, new List<ModFile>(modF));
+                }
+                else
+                {
+                    foreach (ModFile file in modF)
+                    {
+                        if (!conflicts[selectedFile].Contains(file))
+                        {
+                            conflicts[selectedFile].Add(file);
+                        }
+                    }
+                }
+            }
+
+            var tempConflicts = new Dictionary<string, List<ModFile>>();
+
+            foreach (KeyValuePair<string, List<ModFile>> conflict in conflicts)
+            {
+                if (files.Contains(conflict.Key))
+                {
+                    tempConflicts.Add(conflict.Key, new List<ModFile>());
+
+                    foreach (ModFile modFile in conflict.Value)
+                    {
+                        if (ModMana.ModFiles.Contains(modFile))
+                        {
+                            tempConflicts[conflict.Key].Add(modFile);
+                        }
+                    }
+                }
+            }
+
+            conflicts = tempConflicts;
+
+            Properties.Settings.Default.Conflicts = JsonConvert.SerializeObject(conflicts);
+            Settings.Default.Save();
         }
 
 
@@ -301,26 +344,6 @@ namespace KCDModMerger
             if (conflictFilesList.SelectedIndex != -1)
             {
                 var selectedFile = files[conflictFilesList.SelectedIndex];
-                var modF = ModMana.ModFiles.Where((file => file.FileName.Equals(selectedFile)))
-                    .Select((file => file));
-
-                if (!conflicts.ContainsKey(selectedFile))
-                {
-                    conflicts.Add(selectedFile, new List<ModFile>(modF));
-                }
-                else
-                {
-                    foreach (ModFile file in modF)
-                    {
-                        if (!conflicts[selectedFile].Contains(file))
-                        {
-                            conflicts[selectedFile].Add(file);
-                        }
-                    }
-                }
-
-                Properties.Settings.Default.Conflicts = JsonConvert.SerializeObject(conflicts);
-                Settings.Default.Save();
 
                 conflictingModsList.ItemsSource = conflicts[selectedFile].Select((file => file.ModName));
                 conflictingModsList.Visibility = Visibility.Visible;

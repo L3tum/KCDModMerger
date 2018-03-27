@@ -29,7 +29,7 @@ namespace KCDModMerger
             {
                 var converted = ((ModFile) obj);
                 return converted.FileName == this.FileName && converted.ModName == this.ModName &&
-                       converted.FilePath == this.FilePath;
+                       converted.FilePath == this.FilePath && this.PakFile == converted.PakFile;
             }
 
             return false;

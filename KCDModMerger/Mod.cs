@@ -27,6 +27,7 @@ namespace KCDModMerger
         private string version;
         private string[] versionsSupported;
         private ModFile[] dataFiles;
+        private readonly string[] DISALLOWED_FILETYPES = new[] {".tbl", ".skin", ".dds", ".cgf", ".cdf", ".chr", ".usm", ".sqcb", ".1", ".2", ".3", ".4", ".5"};
 
         public ModFile[] DataFiles
         {
@@ -126,7 +127,7 @@ namespace KCDModMerger
                     {
                         foreach (ZipArchiveEntry entry in zip.Entries)
                         {
-                            if (entry.FullName.Contains("."))
+                            if (entry.FullName.Contains(".") && !DISALLOWED_FILETYPES.Any(s => entry.FullName.EndsWith(s)))
                             {
                                 if (file.FilePath.EndsWith("Localization"))
                                 {
