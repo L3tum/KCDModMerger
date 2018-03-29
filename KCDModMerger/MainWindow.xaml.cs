@@ -30,16 +30,16 @@ namespace KCDModMerger
     public partial class MainWindow : Window
     {
         internal static Label CurrentActionLabel;
+        private readonly PerformanceCounter availableRamRounter;
+        private readonly PerformanceCounter cpuCounter;
+        private readonly PerformanceCounter diskCounter;
         private readonly ObservableCollection<string> files = new ObservableCollection<string>();
         private readonly ObservableCollection<string> modNames = new ObservableCollection<string>();
-        private readonly BackgroundWorker worker = new BackgroundWorker();
-        private readonly PerformanceCounter availableRamRounter;
-        private Dictionary<string, List<ModFile>> conflicts;
-        private readonly PerformanceCounter cpuCounter;
-        private bool deleteOldFiles;
-        private readonly PerformanceCounter diskCounter;
-        private bool isMerging;
         private readonly PerformanceCounter ramCounter;
+        private readonly BackgroundWorker worker = new BackgroundWorker();
+        private Dictionary<string, List<ModFile>> conflicts;
+        private bool deleteOldFiles;
+        private bool isMerging;
         private Timer timer;
 
         public MainWindow()
@@ -244,7 +244,7 @@ namespace KCDModMerger
                 cpuUsage.Content = Math.Round(cpuCounter.NextValue()) + "%";
                 ramUsage.Content = App.ConvertToHighest((long) ramCounter.NextValue()) + " (" +
                                    App.ConvertToHighest((long) availableRamRounter.NextValue()) + " Available)";
-                ioUsage.Content = diskCounter.NextValue().ToString();
+                ioUsage.Content = App.ConvertToHighest((long) diskCounter.NextValue()) + "/sec";
             }
         }
 
@@ -337,9 +337,16 @@ namespace KCDModMerger
                                Environment.NewLine + "Author: " +
                                selectedMod.Author + Environment.NewLine + "Created On: " + selectedMod.CreatedOn +
                                Environment.NewLine +
-                               selectedMod.Description + Environment.NewLine + "Merged Files:" + Environment.NewLine +
-                               Environment.NewLine + (selectedMod.MergedFiles.Length > 0
-                                   ? string.Join(Environment.NewLine + Environment.NewLine, selectedMod.MergedFiles)
+                               selectedMod.Description + Environment.NewLine +
+                               (selectedMod.VersionsSupported.Length > 0
+                                   ? "Supported Versions:" + Environment.NewLine +
+                                     Environment.NewLine + string.Join(Environment.NewLine,
+                                         selectedMod.VersionsSupported)
+                                   : "") +
+                               (selectedMod.MergedFiles.Length > 0
+                                   ? "Merged Files:" + Environment.NewLine +
+                                     Environment.NewLine + string.Join(Environment.NewLine + Environment.NewLine,
+                                         selectedMod.MergedFiles)
                                    : "");
             }
         }

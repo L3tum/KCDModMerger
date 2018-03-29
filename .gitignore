@@ -3,3 +3,4 @@ KCDModMerger/obj/**
 packages/**
 KCDModMerger/bin/Debug/**
 KCDModMerger/bin/Release/Log.txt
+KCDModMerger/bin/Release/KCDModMerger.log

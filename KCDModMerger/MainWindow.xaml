@@ -5,10 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KCDModMerger"
         xmlns:properties="clr-namespace:KCDModMerger.Properties"
-        xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"
-        fw:AcrylicWindow.Enabled="True"
         mc:Ignorable="d"
-        Title="KCD Mod Merger" Height="536" Width="1196" Background="#70FFFFFF">
+        Title="KCD Mod Merger" Height="536" Width="1196" Background="White">
     <Window.Resources>
         <Storyboard x:Key="MergingAnimation">
             <StringAnimationUsingKeyFrames Storyboard.TargetProperty="(Label.Content)"
@@ -51,13 +49,20 @@
             </ListView.View>
         </ListView>
         <ScrollViewer Grid.Column="1" Margin="9.667,46,10.333,32.667" MaxWidth="200"
-                      Height="{Binding RelativeSource={RelativeSource FindAncestor, 
-                        AncestorType={x:Type RowDefinition}}, Path=ActualHeight}"
+                      MaxHeight="{Binding RelativeSource={RelativeSource FindAncestor, 
+                        AncestorType={x:Type Grid}}, Path=ActualHeight}"
                       RenderTransformOrigin="0.501,-0.137"
-                      d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       >
+            <ScrollViewer.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="-0.003"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </ScrollViewer.RenderTransform>
             <TextBlock x:Name="modInfo" Grid.Column="1" Margin="9.667,46,10.333,32.667" TextWrapping="Wrap"
                        MaxWidth="200"
                        RenderTransformOrigin="0.501,-0.137"

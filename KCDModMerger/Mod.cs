@@ -26,7 +26,7 @@ namespace KCDModMerger
         private string folderName;
         private string[] folders;
         private string version;
-        private string[] versionsSupported;
+        private string[] versionsSupported = new string[0];
         private ModFile[] dataFiles;
         private string[] mergedFiles = new string[0];
 
@@ -101,8 +101,8 @@ namespace KCDModMerger
 
         public string[] MergedFiles
         {
-            get { return mergedFiles; }
-            set { mergedFiles = value; }
+            get => mergedFiles;
+            set => mergedFiles = value;
         }
 
         #endregion
