@@ -5,8 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KCDModMerger"
         xmlns:properties="clr-namespace:KCDModMerger.Properties"
+        xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"
+        fw:AcrylicWindow.Enabled="True"
         mc:Ignorable="d"
-        Title="KCD Mod Merger" Height="536" Width="800" Background="White">
+        Title="KCD Mod Merger" Height="536" Width="1196" Background="#70FFFFFF">
     <Window.Resources>
         <Storyboard x:Key="MergingAnimation">
             <StringAnimationUsingKeyFrames Storyboard.TargetProperty="(Label.Content)"
@@ -22,68 +24,98 @@
     <Grid Margin="10,0,0.333,-0.333">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" MinWidth="41.333" />
-            <ColumnDefinition Width="Auto" MinWidth="177.333" />
-            <ColumnDefinition Width="Auto" MinWidth="65.333" />
-            <ColumnDefinition Width="Auto" MinWidth="63" />
-            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" MinWidth="32" />
+            <ColumnDefinition Width="Auto" MinWidth="193.333" />
+            <ColumnDefinition Width="Auto" MinWidth="72.667" />
+            <ColumnDefinition Width="67*" />
+            <ColumnDefinition Width="87*" />
+            <ColumnDefinition Width="678*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="100*" />
         </Grid.RowDefinitions>
         <TextBox x:Name="textBox" TextWrapping="Wrap"
-                 Text="{Binding KCDPath, Source={x:Static properties:Settings.Default}}" Margin="9.667,10,0,470.667"
-                 Grid.Column="2" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="26" />
+                 Text="{Binding KCDPath, Source={x:Static properties:Settings.Default}}" Margin="0.333,12,0,0"
+                 Grid.Column="3" Grid.ColumnSpan="4" Height="23" MinWidth="140" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <Button x:Name="kcdFolderDialogButton" Content="Choose KCD Root Folder" VerticalAlignment="Top"
-                RenderTransformOrigin="0.345,0.675" Height="23" Margin="10.667,10,11.667,0"
-                Click="KcdFolderDialogButton_Click" Grid.Column="1" />
-        <ListView x:Name="modList" Margin="0,46,10.333,-78" VerticalAlignment="Top" Height="428"
-                  SelectionChanged="modList_SelectionChanged" SelectionMode="Single" Grid.Column="0">
+                RenderTransformOrigin="0.345,0.675" Height="23" Margin="9.667,12,12.667,0"
+                Click="KcdFolderDialogButton_Click" Grid.Column="2"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+        <ListView x:Name="modList" Margin="0,46,10.333,32.667"
+                  SelectionChanged="modList_SelectionChanged" SelectionMode="Single" Grid.Column="0"
+                  d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin">
             <ListView.View>
                 <GridView>
                     <GridViewColumn />
                 </GridView>
             </ListView.View>
         </ListView>
-        <TextBlock x:Name="modInfo" Grid.Column="1" Margin="10.667,221,10.333,0" TextWrapping="Wrap"
-                   VerticalAlignment="Top"
-                   RenderTransformOrigin="0.501,-0.137" Width="157.333333333333" />
-        <ListView x:Name="conflictFilesList" Grid.Column="2" Height="402" Margin="10.333,72,9,-76.667"
-                  VerticalAlignment="Top" SelectionMode="Single" SelectionChanged="conflictFilesList_SelectionChanged">
+        <ScrollViewer Grid.Column="1" Margin="9.667,46,10.333,32.667" MaxWidth="200"
+                      Height="{Binding RelativeSource={RelativeSource FindAncestor, 
+                        AncestorType={x:Type RowDefinition}}, Path=ActualHeight}"
+                      RenderTransformOrigin="0.501,-0.137"
+                      d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      >
+            <TextBlock x:Name="modInfo" Grid.Column="1" Margin="9.667,46,10.333,32.667" TextWrapping="Wrap"
+                       MaxWidth="200"
+                       RenderTransformOrigin="0.501,-0.137"
+                       d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+        </ScrollViewer>
+        <ListView x:Name="conflictFilesList" Grid.Column="3" Margin="7.333,72,9.333,32.667" SelectionMode="Single"
+                  SelectionChanged="conflictFilesList_SelectionChanged"
+                  d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin">
             <ListView.View>
                 <GridView>
                     <GridViewColumn />
                 </GridView>
             </ListView.View>
         </ListView>
-        <ListView x:Name="conflictingModsList" Grid.Column="3" Height="402" Margin="11,72,0,-75.333"
-                  VerticalAlignment="Top"
-                  HorizontalAlignment="Left" SelectionMode="Single"
-                  SelectionChanged="conflictingModsList_SelectionChanged">
+        <ListView x:Name="conflictingModsList" Grid.Column="4" Margin="8.667,72,9.667,32.667" SelectionMode="Single"
+                  SelectionChanged="conflictingModsList_SelectionChanged"
+                  d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin">
             <ListView.View>
                 <GridView>
                     <GridViewColumn />
                 </GridView>
             </ListView.View>
         </ListView>
-        <Button x:Name="mergeButton" Content="Merge" Grid.Column="1" Margin="10.667,61,9.667,0" VerticalAlignment="Top"
-                Height="20" Click="mergeButton_Click" />
-        <Label x:Name="label" Content="Mods" HorizontalAlignment="Left" Margin="3,10,0,0" VerticalAlignment="Top"
-               RenderTransformOrigin="0.317,0.487" Height="26" Width="40" Grid.ColumnSpan="2" />
-        <Label x:Name="conflictFilesLabel" Content="Conflicts" Grid.Column="2" Margin="10.333,41,0,0"
-               VerticalAlignment="Top" Height="26" Width="55.3333333333333" HorizontalAlignment="Left" />
-        <Label x:Name="priorityLabel" Content="Priority" Grid.Column="3" HorizontalAlignment="Left" Margin="11,41,0,0"
-               VerticalAlignment="Top" Height="26" Width="48" />
-        <Button x:Name="launchKdiff" Content="Launch KDiff3" Grid.Column="1" Margin="10.667,113,9.667,0"
-                VerticalAlignment="Top" Height="21" Click="launchKdiff_Click" />
-        <Label x:Name="lowerPriorityLabel" Content="Lower Priority" Grid.Column="4" HorizontalAlignment="Left"
-               Margin="12.333,72,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.351,-0.051" FontSize="8"
-               Height="21" Width="68" />
-        <Label x:Name="higherPriorityLabel" Content="Higher Priority" Grid.Column="4" HorizontalAlignment="Left"
-               Margin="12.333,368,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.351,-0.051" FontSize="8"
-               Height="21" Width="68" />
-        <ProgressBar x:Name="mergeProgressBar" Grid.Column="1" HorizontalAlignment="Left" Height="22"
-                     Margin="10.667,184,0,0" VerticalAlignment="Top" Width="156" />
-        <Label x:Name="mergingLabel" Content="Merging" Grid.Column="1" HorizontalAlignment="Left"
-               Margin="13.667,153,0,0" VerticalAlignment="Top" Width="155" />
+        <Button x:Name="mergeButton" Content="Merge" Grid.Column="2" Margin="9.667,57,12.667,0"
+                VerticalAlignment="Top"
+                Height="23" Click="mergeButton_Click"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+        <Label x:Name="label" Content="Mods" Margin="0,10,0.333,0" VerticalAlignment="Top"
+               RenderTransformOrigin="0.317,0.487" Height="26"
+               d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+        <Label x:Name="conflictFilesLabel" Content="Conflicts" Grid.Column="3" Margin="5.333,41,12.333,0"
+               VerticalAlignment="Top" Height="26" d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+        <Label x:Name="priorityLabel" Content="Priority" Grid.Column="4" Margin="8.667,41,8.667,0"
+               VerticalAlignment="Top" Height="26" d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+        <Button x:Name="launchKdiff" Content="Launch KDiff3" Grid.Column="2" Margin="9.667,103,12.667,0"
+                VerticalAlignment="Top" Height="23" Click="launchKdiff_Click"
+                d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+        <Label x:Name="lowerPriorityLabel" Content="Lower Priority" Grid.Column="5"
+               Margin="12.333,74,10.333,0" VerticalAlignment="Top" RenderTransformOrigin="-0.351,-0.051" FontSize="8"
+               Height="21" d:LayoutOverrides="TopMargin, BottomMargin" />
+        <Label x:Name="higherPriorityLabel" Content="Higher Priority" Grid.Column="5"
+               Margin="12.333,0,10.333,115.667" VerticalAlignment="Bottom" RenderTransformOrigin="-0.351,-0.051"
+               FontSize="8"
+               Height="21" d:LayoutOverrides="TopMargin, BottomMargin" />
+        <ProgressBar x:Name="mergeProgressBar" Grid.Column="2"
+                     Margin="9.667,249,12.667,235.667" d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+        <Label x:Name="mergingLabel" Content="Merging" Grid.Column="2"
+               Margin="9.667,218,12.667,0" VerticalAlignment="Top" Height="26" d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+        <Button x:Name="clearCache" Content="Clear Cache" Grid.Column="2" Margin="9.667,148,12.667,0"
+                VerticalAlignment="Top" Click="clearCache_Click" Height="23" d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin" />
+        <Label x:Name="currentActionLabel" Content="" Grid.Column="6" Margin="9.667,0,0,32.667" VerticalAlignment="Bottom" RenderTransformOrigin="-0.202,0.667" Height="126" HorizontalAlignment="Left" Width="152"/>
+        <Label x:Name="justSomeLabel" Content="Last Log Entry:" Grid.Column="6" Margin="9.667,0,0,163.667" VerticalAlignment="Bottom" Height="26" HorizontalAlignment="Left" Width="152"/>
+        <Button x:Name="openLogFile" Content="Open Log File" Grid.Column="2" Margin="9.667,192,12.667,0" VerticalAlignment="Top" Height="23" Click="openLogFile_Click" d:LayoutOverrides="LeftMargin, RightMargin, TopMargin, BottomMargin"/>
+        <Label x:Name="cpuUsageLabel" Content="CPU Usage (All Processors)" Grid.Column="6" HorizontalAlignment="Left" Margin="9.667,72,0,0" VerticalAlignment="Top" Width="152"/>
+        <Label x:Name="cpuUsage" Content="" Grid.Column="6" HorizontalAlignment="Left" Margin="9.667,103,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="ramUsageLabel" Content="RAM Usage" Grid.Column="6" Margin="9.667,145,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="152"/>
+        <Label x:Name="ramUsage" Content="" Grid.Column="6" HorizontalAlignment="Left" Margin="9.667,175,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="ioUsageLabel" Content="IO Usage (File/Network)" Grid.Column="6" HorizontalAlignment="Left" Margin="9.667,217,0,0" VerticalAlignment="Top" Width="152"/>
+        <Label x:Name="ioUsage" Content="" Grid.Column="6" HorizontalAlignment="Left" Margin="9.667,247,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

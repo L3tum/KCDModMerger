@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -33,6 +35,38 @@ namespace KCDModMerger
             }
 
             return false;
+        }
+
+        public void Delete()
+        {
+            Logger.Log("Deleting " + FileName + " in " + PakFile.Split('\\').Last() + "(" + ModName + ")");
+            if (File.Exists(PakFile))
+            {
+                using (FileStream fs = File.Open(PakFile, FileMode.Open))
+                {
+                    using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
+                    {
+                        var entry = zip.Entries.FirstOrDefault(archiveEntry => archiveEntry.FullName == FileName);
+
+                        if (entry != null)
+                        {
+                            entry.Delete();
+                            Logger.Log(
+                                "Deleted " + FileName + " in " + PakFile.Split('\\').Last() + "(" + ModName + ")!");
+                        }
+                        else
+                        {
+                            Logger.Log(
+                                "Could not find " + FileName + " in " + PakFile.Split('\\').Last() + "(" + ModName +
+                                ")!");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                Logger.Log(PakFile.Split('\\').Last() + "(" + ModName + ") does not exist!");
+            }
         }
     }
 }
