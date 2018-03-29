@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Windows;
+using KCDModMerger.Properties;
 using Microsoft.Win32;
 
 namespace KCDModMerger
@@ -36,7 +38,9 @@ namespace KCDModMerger
             Logger.Log(string.Format("Processor: {0}", string.Join("", ("" + OSVersionInfo.ProcessorBits).Reverse())),
                 true);
             Logger.Log("Cores: " + Environment.ProcessorCount, true);
-            Logger.Log("Memory: " + ConvertToHighest(Environment.WorkingSet), true);
+            long memKb;
+            GetPhysicallyInstalledSystemMemory(out memKb);
+            Logger.Log("Memory: " + (memKb / 1024 / 1024) + " GiB!");
             Logger.Log(string.Format("OS: {0}", string.Join("", ("" + OSVersionInfo.OSBits).Reverse())), true);
             Logger.Log(string.Format("Program: {0}", string.Join("", ("" + OSVersionInfo.ProgramBits).Reverse())),
                 true);
@@ -187,5 +191,9 @@ namespace KCDModMerger
 
             return maxDotNetVersion;
         }
+
+        [DllImport("kernel32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetPhysicallyInstalledSystemMemory(out long TotalMemoryInKilobytes);
     }
 }
