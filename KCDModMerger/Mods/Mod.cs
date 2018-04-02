@@ -50,7 +50,7 @@ namespace KCDModMerger.Mods
             logBuilder.AppendLine(Logger.BuildLogWithDate("Initializing Manifest"));
 
             manifest = new ModManifest(folderName + "\\mod.manifest", logBuilder);
-            manifest.DisplayName = folderName;
+            manifest.DisplayName = folderName.Split('\\').Last();
             manifest.ReadManifest();
 
             logBuilder.AppendLine(Logger.BuildLogWithDate("Initialized Manifest!"));
