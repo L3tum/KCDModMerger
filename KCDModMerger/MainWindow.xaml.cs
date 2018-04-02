@@ -154,19 +154,35 @@ namespace KCDModMerger
         private void InitializePerformanceWatchers()
         {
             Logger.Log("Initializing Performance Watcher");
-            cpuCounter = new PerformanceCounter("Process", "% Processor Time", Process.GetCurrentProcess().ProcessName);
-            ramCounter = new PerformanceCounter("Process", "Working Set", Process.GetCurrentProcess().ProcessName);
-            availableRamRounter = new PerformanceCounter("Memory", "Available Bytes");
-            diskCounter =
-                new PerformanceCounter("Process", "IO Data Bytes/sec", Process.GetCurrentProcess().ProcessName);
-            threadsCounter = new PerformanceCounter(".Net CLR LocksAndThreads", "# of current logical Threads",
-                Process.GetCurrentProcess().ProcessName);
-            cpuCounter.NextValue();
-            ramCounter.NextValue();
-            availableRamRounter.NextValue();
-            diskCounter.NextValue();
-            threadsCounter.NextValue();
-            timer = new Timer(UpdateUsages, null, 0, 1000);
+            try
+            {
+                cpuCounter = new PerformanceCounter("Process", "% Processor Time",
+                    Process.GetCurrentProcess().ProcessName);
+                ramCounter = new PerformanceCounter("Process", "Working Set", Process.GetCurrentProcess().ProcessName);
+                availableRamRounter = new PerformanceCounter("Memory", "Available Bytes");
+                diskCounter =
+                    new PerformanceCounter("Process", "IO Data Bytes/sec", Process.GetCurrentProcess().ProcessName);
+                threadsCounter = new PerformanceCounter(".Net CLR LocksAndThreads", "# of current logical Threads",
+                    Process.GetCurrentProcess().ProcessName);
+                cpuCounter.NextValue();
+                ramCounter.NextValue();
+                availableRamRounter.NextValue();
+                diskCounter.NextValue();
+                threadsCounter.NextValue();
+                timer = new Timer(UpdateUsages, null, 0, 1000);
+            }
+            catch (InvalidOperationException e)
+            {
+                Logger.Log("Performance Watchers: " + e.Message);
+            }
+            finally
+            {
+                cpuCounter = null;
+                ramCounter = null;
+                availableRamRounter = null;
+                diskCounter = null;
+                threadsCounter = null;
+            }
             Logger.Log("Initialized Performance Watcher!");
         }
 
@@ -307,7 +323,7 @@ namespace KCDModMerger
         /// <param name="state">The state.</param>
         private void UpdateUsages(object state)
         {
-            if (isInformationVisible)
+            if (isInformationVisible && cpuCounter != null && ramCounter != null && availableRamRounter != null && diskCounter != null && threadsCounter != null)
             {
                 var cpu = Math.Round(cpuCounter.NextValue()) + "%";
                 var ram = App.ConvertToHighest((long) ramCounter.NextValue()) + " (" +
