@@ -1,11 +1,17 @@
-﻿using System;
+﻿#region usings
+
+using System;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Threading;
 using System.Windows;
 using KCDModMerger.Properties;
 using Microsoft.Win32;
+
+#endregion
 
 namespace KCDModMerger
 {
@@ -14,17 +20,51 @@ namespace KCDModMerger
     /// </summary>
     public partial class App : Application
     {
+        public static int MainThreadId = -1;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="App"/> class.
+        /// </summary>
         public App()
         {
+            AppDomain.CurrentDomain.UnhandledException += Logger.LogException;
+            MainThreadId = Thread.CurrentThread.ManagedThreadId;
 #if DEBUG
             Logger.Log("Cleared User-defined Settings!");
             Settings.Default.Reset();
 #endif
+            //TODO: ILMerge?
+            Logger.Log("Deleting Old Log File");
             if (File.Exists(Logger.LOG_FILE)) File.Delete(Logger.LOG_FILE);
-
-            AppDomain.CurrentDomain.UnhandledException += Logger.LogException;
+            Logger.Log("Deleted Old Log File!");
 
             Logger.Log("Initializing ModMerger");
+
+            PrintInfo();
+
+            Logger.Log("Determining Unrar Version to load");
+            if (string.Join("", ("" + OSVersionInfo.ProcessorBits).Reverse()) == "64Bit" &&
+                string.Join("", ("" + OSVersionInfo.OSBits).Reverse()) == "64Bit" &&
+                string.Join("", ("" + OSVersionInfo.ProgramBits).Reverse()) == "64Bit")
+            {
+                Logger.Log("Loading 64Bit Unrar");
+                var location = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+                File.Copy(location + "\\Tools\\Unrar\\64Bit\\unrar.dll", location + "\\unrar.dll", true);
+                Logger.Log("Loaded 64Bit Unrar!");
+            }
+            else
+            {
+                Logger.Log("Loading 32Bit Unrar");
+                var location = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+                File.Copy(location + "\\Tools\\Unrar\\32Bit\\unrar.dll", location + "\\unrar.dll", true);
+                Logger.Log("Loaded 32Bit Unrar!");
+            }
+
+            Logger.Log("Initialized ModMerger!");
+        }
+
+        private void PrintInfo()
+        {
             Logger.Log("Operating System Information!");
             Logger.Log("----------------------------");
             Logger.Log(string.Format("Name: {0}", OSVersionInfo.Name), true);
@@ -35,9 +75,11 @@ namespace KCDModMerger
                 Logger.Log("Service Pack: None!");
             Logger.Log(string.Format("Version: {0}", OSVersionInfo.VersionString), true);
             Logger.Log(".Net Version: " + GetDotNetVerson(), true);
-            Logger.Log(string.Format("Processor: {0}", string.Join("", ("" + OSVersionInfo.ProcessorBits).Reverse())),
-                true);
-            Logger.Log("Cores: " + Environment.ProcessorCount, true);
+
+            Logger.Log(GetProcessorInfo());
+
+            Logger.Log(GetGPUInfo());
+
             long memKb;
             GetPhysicallyInstalledSystemMemory(out memKb);
             Logger.Log("Memory: " + (memKb / 1024 / 1024) + " GiB!");
@@ -48,12 +90,133 @@ namespace KCDModMerger
             Logger.Log("User: " + Environment.UserName, true);
             Logger.Log("Run As Administrator: " + new WindowsPrincipal(WindowsIdentity.GetCurrent())
                            .IsInRole(WindowsBuiltInRole.Administrator), true);
-            Logger.Log("Initialized ModMerger!");
+            Logger.Log("Running in: " + Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), true);
+        }
+
+        private string GetProcessorInfo()
+        {
+            var indentation = Logger.BuildLogWithDate("").Length;
+            var indent = "";
+
+            for (var i = 0; i < indentation; i++)
+            {
+                indent += " ";
+            }
+
+            var log = Logger.BuildLog("Processors: " + Environment.NewLine);
+
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher(
+                "select * from Win32_Processor");
+            var props = searcher.Get();
+
+            foreach (ManagementBaseObject prop in props)
+            {
+                var name = "";
+                var cores = "";
+                var clockSpeed = "";
+                var adressWidth = "";
+
+                foreach (PropertyData propProperty in prop.Properties)
+                {
+                    switch (propProperty.Name)
+                    {
+                        case "Name":
+                        {
+                            name = (string) propProperty.Value;
+                            break;
+                        }
+                        case "MaxClockSpeed":
+                        {
+                            clockSpeed = "" + propProperty.Value;
+                            break;
+                        }
+                        case "AddressWidth":
+                        {
+                            adressWidth = "" + propProperty.Value;
+                            break;
+                        }
+                        case "NumberOfLogicalProcessors":
+                        {
+                            cores = "" + propProperty.Value;
+                            break;
+                        }
+                    }
+                }
+
+                log += indent + "Name: " + name + Environment.NewLine;
+                log += indent + "Logical Cores: " + cores + Environment.NewLine;
+                log += indent + "Clock Speed: " + clockSpeed + "Mhz" + Environment.NewLine;
+                log += indent + "Address Width: " + adressWidth + "Bit" + Environment.NewLine;
+            }
+
+            return log;
+        }
+
+        private string GetGPUInfo()
+        {
+            var indentation = Logger.BuildLogWithDate("").Length;
+            var indent = "";
+
+            for (var i = 0; i < indentation; i++)
+            {
+                indent += " ";
+            }
+
+            var log = Logger.BuildLog("GPUs: " + Environment.NewLine);
+
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher(
+                "select * from Win32_VideoController");
+            var props = searcher.Get();
+
+            foreach (ManagementBaseObject prop in props)
+            {
+                var name = "";
+                var horizontalRes = "";
+                var verticalRes = "";
+                var vram = "";
+
+                foreach (PropertyData propProperty in prop.Properties)
+                {
+                    switch (propProperty.Name)
+                    {
+                        case "Name":
+                        {
+                            name = (string) propProperty.Value;
+                            break;
+                        }
+                        case "CurrentHorizontalResolution":
+                        {
+                            horizontalRes = "" + propProperty.Value;
+                            break;
+                        }
+                        case "CurrentVerticalResolution":
+                        {
+                            verticalRes = "" + propProperty.Value;
+                            break;
+                        }
+                        case "AdapterRAM":
+                        {
+                            vram = ConvertToHighest(long.Parse("" + propProperty.Value)) +
+                                   " (This might be wrong because this is using Windows Driver instead of AMD/Nvidia Driver)";
+                            break;
+                        }
+                    }
+                }
+
+                log += indent + "Name: " + name + Environment.NewLine;
+                log += indent + "Resolution: " + horizontalRes + "x" + verticalRes + Environment.NewLine;
+                log += indent + "VRAM: " + vram + Environment.NewLine;
+            }
+
+            return log;
         }
 
         private void App_OnExit(object sender, ExitEventArgs e)
         {
             Logger.LogToFile(null);
+            Settings.Default.Save();
+
+            File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\unrar.dll");
         }
 
         internal static string ConvertToHighest(long bytes)
@@ -194,6 +357,6 @@ namespace KCDModMerger
 
         [DllImport("kernel32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool GetPhysicallyInstalledSystemMemory(out long TotalMemoryInKilobytes);
+        private static extern bool GetPhysicallyInstalledSystemMemory(out long TotalMemoryInKilobytes);
     }
 }

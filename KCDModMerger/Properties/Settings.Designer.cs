@@ -37,25 +37,25 @@ namespace KCDModMerger.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string Conflicts {
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DeleteOldFiles {
             get {
-                return ((string)(this["Conflicts"]));
+                return ((bool)(this["DeleteOldFiles"]));
             }
             set {
-                this["Conflicts"] = value;
+                this["DeleteOldFiles"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string FilePaths {
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool CopyAllFiles {
             get {
-                return ((string)(this["FilePaths"]));
+                return ((bool)(this["CopyAllFiles"]));
             }
             set {
-                this["FilePaths"] = value;
+                this["CopyAllFiles"] = value;
             }
         }
     }

@@ -1,41 +1,119 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
+﻿#region usings
+
+using System;
 using System.IO;
-using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
+using KCDModMerger.Properties;
+
+#endregion
 
 namespace KCDModMerger
 {
-    static class Logger
+    internal static class Logger
     {
-        private static StringBuilder sb = new StringBuilder();
+        private static readonly StringBuilder sb = new StringBuilder();
         private static Timer timer = new Timer(LogToFile, null, 0, 10000);
 
         internal static string LOG_FILE =
-            Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(ModManager)).Location) +
+            Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) +
             "\\KCDModMerger.log";
 
+        /// <summary>
+        /// Writes the given string to the log file
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="addExclamation"></param>
         public static void Log(string message, bool addExclamation = false)
         {
+            message = BuildLogWithDate(message, addExclamation);
+            lock (sb)
+            {
+                sb.AppendLine(message);
+            }
+
+            if (MainWindow.CurrentActionLabel != null && MainWindow.isInformationVisible)
+                MainWindow.CurrentActionLabel.InvokeIfRequired(
+                    () => { MainWindow.CurrentActionLabel.Content = message; },
+                    DispatcherPriority.ApplicationIdle);
+        }
+
+        /// <summary>
+        /// Writes a StringBuilder to the log file
+        /// </summary>
+        /// <param name="stringBuilder"></param>
+        public static void Log(StringBuilder stringBuilder)
+        {
+            if (stringBuilder.Length > 0)
+            {
+                lock (sb)
+                {
+                    sb.Append(stringBuilder);
+                }
+
+                if (MainWindow.CurrentActionLabel != null && MainWindow.isInformationVisible)
+                    MainWindow.CurrentActionLabel.InvokeIfRequired(
+                        () => { MainWindow.CurrentActionLabel.Content = stringBuilder[stringBuilder.Length - 1]; },
+                        DispatcherPriority.ApplicationIdle);
+            }
+        }
+
+        /// <summary>
+        /// Returns the processed message without a date
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="addExclamation"></param>
+        /// <returns></returns>
+        public static string BuildLog(string message, bool addExclamation = false)
+        {
+            message = CheckForExclamation(message, addExclamation);
+            message = CheckForThread(message);
+
+            return message;
+        }
+
+        /// <summary>
+        /// Returns the processed message with a date
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="addExclamation"></param>
+        /// <returns></returns>
+        public static string BuildLogWithDate(string message, bool addExclamation = false)
+        {
+            message = BuildLog(message, addExclamation);
+
+            message = "[" + DateTime.Now + "] " + message;
+
+            return message;
+        }
+
+        private static string CheckForExclamation(string message, bool addExclamation)
+        {
             if (!addExclamation && !message.EndsWith("!") && !message.EndsWith(".") && !message.EndsWith(":") &&
-                !message.EndsWith("}") && !message.EndsWith("]") && !message.EndsWith("-"))
+                !message.EndsWith("}") && !message.EndsWith("]") && !message.EndsWith("-") && !message.EndsWith("?") &&
+                !message.EndsWith(")") && !message.EndsWith(" ") && !message.EndsWith(Environment.NewLine))
+                return message + "...";
+
+            if (addExclamation)
             {
-                message += "...";
-            }
-            else if (addExclamation)
-            {
-                message += "!";
+                return message + "!";
             }
 
-            sb.AppendLine("[" + DateTime.Now.ToString() + "] " + message);
+            return message;
+        }
 
-            if (MainWindow.CurrentActionLabel != null)
+        private static string CheckForThread(string message)
+        {
+            if (SynchronizationContext.Current == null && Thread.CurrentThread.ManagedThreadId != App.MainThreadId)
             {
-                MainWindow.CurrentActionLabel.Content = message;
+                return "[Threaded] " + message;
             }
+
+            return message;
         }
 
         internal static void LogException(object sender, UnhandledExceptionEventArgs args)
@@ -43,14 +121,28 @@ namespace KCDModMerger
             var exception = (Exception) args.ExceptionObject;
 
             CreateExceptionString(exception);
+
+            var result = MessageBox.Show(
+                "Program encountered a critical exception!" + Environment.NewLine + "Clear Cache?",
+                "KCDModMerger", MessageBoxButton.YesNo);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                Settings.Default.Reset();
+                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\VanillaFiles.json"))
+                {
+                    File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\VanillaFiles.json");
+                }
+            }
+            else
+            {
+                Settings.Default.Save();
+            }
         }
 
         private static void CreateExceptionString(Exception e, string indent = "")
         {
-            if (indent != "")
-            {
-                sb.AppendFormat("{0}Inner ", indent);
-            }
+            if (indent != "") sb.AppendFormat("{0}Inner ", indent);
 
             sb.AppendFormat("Critical Exception Encountered:{0}Type: {1}", Environment.NewLine + indent,
                 e.GetType().FullName);
@@ -69,11 +161,17 @@ namespace KCDModMerger
 
         internal static void LogToFile(object state)
         {
-            if (sb.Length > 0)
+            Task.Run(() =>
             {
-                File.AppendAllText(LOG_FILE, sb.ToString());
-                sb.Clear();
-            }
+                if (sb.Length > 0)
+                {
+                    lock (sb)
+                    {
+                        File.AppendAllText(LOG_FILE, sb.ToString());
+                        sb.Clear();
+                    }
+                }
+            });
         }
     }
 }

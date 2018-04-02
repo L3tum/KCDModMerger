@@ -1,26 +1,31 @@
-﻿using System;
+﻿#region usings
+
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
+using KCDModMerger.Mods;
 using KCDModMerger.Properties;
-using Newtonsoft.Json;
+using Button = System.Windows.Controls.Button;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using DragEventHandler = System.Windows.DragEventHandler;
 using Label = System.Windows.Controls.Label;
 using ListBox = System.Windows.Controls.ListBox;
-using MessageBox = System.Windows.MessageBox;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Timer = System.Threading.Timer;
+
+#endregion
 
 namespace KCDModMerger
 {
@@ -30,76 +35,102 @@ namespace KCDModMerger
     public partial class MainWindow : Window
     {
         internal static Label CurrentActionLabel;
-        private readonly PerformanceCounter availableRamRounter;
-        private readonly PerformanceCounter cpuCounter;
-        private readonly PerformanceCounter diskCounter;
-        private readonly ObservableCollection<string> files = new ObservableCollection<string>();
-        private readonly ObservableCollection<string> modNames = new ObservableCollection<string>();
-        private readonly PerformanceCounter ramCounter;
+        internal static bool isMerging;
+        internal static bool isInformationVisible;
+        internal static Dispatcher dispatcherGlobal;
+        private readonly Dictionary<string, List<ModFile>> conflicts = new Dictionary<string, List<ModFile>>();
         private readonly BackgroundWorker worker = new BackgroundWorker();
-        private Dictionary<string, List<ModFile>> conflicts;
-        private bool deleteOldFiles;
-        private bool isMerging;
+        private PerformanceCounter availableRamRounter;
+        private PerformanceCounter cpuCounter;
+        private PerformanceCounter diskCounter;
+        private PerformanceCounter ramCounter;
+        private PerformanceCounter threadsCounter;
         private Timer timer;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainWindow"/> class.
+        /// </summary>
         public MainWindow()
         {
             Logger.Log("Initializing Main Window");
 
-            Logger.Log("Initializing Performance Watcher");
-            cpuCounter = new PerformanceCounter("Process", "% Processor Time", Process.GetCurrentProcess().ProcessName);
-            ramCounter = new PerformanceCounter("Process", "Working Set", Process.GetCurrentProcess().ProcessName);
-            availableRamRounter = new PerformanceCounter("Memory", "Available Bytes");
-            diskCounter = new PerformanceCounter("Process", "IO Data Bytes/sec",
-                Process.GetCurrentProcess().ProcessName);
-            cpuCounter.NextValue();
-            ramCounter.NextValue();
-            availableRamRounter.NextValue();
-            diskCounter.NextValue();
-            timer = new Timer(UpdateUsages, null, 0, 1000);
-            Logger.Log("Initialized Performance Watcher!");
-
-            Logger.Log("Loading Saved Conflicts");
-            conflicts =
-                JsonConvert.DeserializeObject<Dictionary<string, List<ModFile>>>(Settings.Default
-                    .Conflicts);
-            Logger.Log("Loaded Saved Conflicts!");
-            if (conflicts == null)
-            {
-                Logger.Log("No Saved Conflicts found!");
-                conflicts = new Dictionary<string, List<ModFile>>();
-            }
+            // Self-documented
+            InitializePerformanceWatchers();
 
             Logger.Log("Initializing Components");
 
             InitializeComponent();
 
             CurrentActionLabel = currentActionLabel;
+            dispatcherGlobal = Dispatcher;
 
             Logger.Log("Initialized Components!");
 
+            // Self-documented
+            InitializeMergeWorker();
+
+            Logger.Log("Starting ModManager");
+            ModMana = new ModManager();
+            Logger.Log("Started ModManager!");
+
+            Logger.Log("Assigning ModManager Listeners");
+            ModMana.PropertyChanged += ModManaChangeListener;
+            Logger.Log("Assigned ModManager Listeners!");
+
+            // Self-documented
+            InitializeUI();
+
+            // Self-documented
+            UpdateConflicts();
+
+            Logger.Log("Initialized Main Window!");
+        }
+
+        /// <summary>
+        /// Gets the modmanager.
+        /// </summary>
+        /// <value>
+        /// The ModManager.
+        /// </value>
+        public ModManager ModMana { get; }
+
+        /// <summary>
+        /// Initializes the merge worker.
+        /// </summary>
+        private void InitializeMergeWorker()
+        {
+            Logger.Log("Initializing Merge Worker");
             worker.DoWork += WorkerDoWork;
             worker.ProgressChanged += WorkerOnProgressChanged;
             worker.RunWorkerCompleted += WorkerOnRunWorkerCompleted;
             worker.WorkerReportsProgress = true;
+            Logger.Log("Initialized Merge Worker!");
+        }
 
+        /// <summary>
+        /// Initializes the UI.
+        /// </summary>
+        private void InitializeUI()
+        {
+            Logger.Log("Initializing UI");
 
-            modList.DataContext = this;
-            modList.ItemsSource = modNames;
-
-            ModMana.PropertyChanged += UpdateStuff;
+            ToolTipService.ShowOnDisabledProperty.OverrideMetadata(typeof(Button), new FrameworkPropertyMetadata(true));
 
             conflictFilesList.DataContext = this;
-            conflictFilesList.ItemsSource = files;
+            conflictFilesList.ItemsSource = ModMana.Conflicts;
+
+            var source = FindResource("ModNamesVS") as CollectionViewSource;
+            source.Source = ModMana.ModNames;
 
             //if statement to check for the future maybe
             conflictingModsList.Visibility = Visibility.Hidden;
-            launchKdiff.Visibility = Visibility.Hidden;
+            launchKdiff.DisableButton(
+                "You need to select a conflicting file and a corresponding mod in the lists on the right to do this!");
             priorityLabel.Visibility = Visibility.Hidden;
             lowerPriorityLabel.Visibility = Visibility.Hidden;
             higherPriorityLabel.Visibility = Visibility.Hidden;
-            mergeProgressBar.Visibility = isMerging ? Visibility.Visible : Visibility.Hidden;
-            mergingLabel.Visibility = isMerging ? Visibility.Visible : Visibility.Hidden;
+            mergeProgressBar.Visibility = Visibility.Hidden;
+            mergingLabel.Visibility = Visibility.Hidden;
 
             conflictingModsList.PreviewMouseMove += modsList_PreviewMouseMove;
 
@@ -114,151 +145,212 @@ namespace KCDModMerger
                     DropEvent,
                     new DragEventHandler(modsList_Drop)));
             conflictingModsList.ItemContainerStyle = style;
-
-            UpdateStuff(null, null);
-
-            Logger.Log("Initialized Main Window!");
+            Logger.Log("Initialized UI!");
         }
 
-        private ModManager ModMana { get; } = new ModManager();
-
-        public IEnumerable<string> ModNames
+        /// <summary>
+        /// Initializes the performance watchers.
+        /// </summary>
+        private void InitializePerformanceWatchers()
         {
-            get => modNames;
-            set
-            {
-                modNames.Clear();
-                foreach (var s in value) modNames.Add(s);
-
-                modList.Visibility = modNames.Count > 0 ? Visibility.Visible : Visibility.Hidden;
-            }
+            Logger.Log("Initializing Performance Watcher");
+            cpuCounter = new PerformanceCounter("Process", "% Processor Time", Process.GetCurrentProcess().ProcessName);
+            ramCounter = new PerformanceCounter("Process", "Working Set", Process.GetCurrentProcess().ProcessName);
+            availableRamRounter = new PerformanceCounter("Memory", "Available Bytes");
+            diskCounter =
+                new PerformanceCounter("Process", "IO Data Bytes/sec", Process.GetCurrentProcess().ProcessName);
+            threadsCounter = new PerformanceCounter(".Net CLR LocksAndThreads", "# of current logical Threads",
+                Process.GetCurrentProcess().ProcessName);
+            cpuCounter.NextValue();
+            ramCounter.NextValue();
+            availableRamRounter.NextValue();
+            diskCounter.NextValue();
+            threadsCounter.NextValue();
+            timer = new Timer(UpdateUsages, null, 0, 1000);
+            Logger.Log("Initialized Performance Watcher!");
         }
 
-        public IEnumerable<string> Files
+        /// <summary>
+        /// Invokes if required.
+        /// </summary>
+        /// <param name="action">The action.</param>
+        /// <param name="priority">The priority.</param>
+        private void InvokeIfRequired(Action action, DispatcherPriority priority = DispatcherPriority.Background)
         {
-            get => files;
-            set
-            {
-                files.Clear();
-                foreach (var s in value) files.Add(s);
-
-                conflictFilesList.Visibility = files.Count > 0 ? Visibility.Visible : Visibility.Hidden;
-                conflictFilesLabel.Visibility = files.Count > 0 ? Visibility.Visible : Visibility.Hidden;
-            }
+            if (!Dispatcher.CheckAccess())
+                Dispatcher.Invoke(action, priority);
+            else
+                action.Invoke();
         }
 
+        /// <summary>
+        /// Workers the on run worker completed.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="runWorkerCompletedEventArgs">The <see cref="RunWorkerCompletedEventArgs"/> instance containing the event data.</param>
         private void WorkerOnRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
         {
             Logger.Log("Finished Merging!");
             isMerging = false;
-            mergeProgressBar.Visibility = isMerging ? Visibility.Visible : Visibility.Hidden;
+            mergeProgressBar.Visibility = Visibility.Hidden;
+            mergeButton.Visibility = Visibility.Visible;
             var sb = FindResource("MergingAnimation") as Storyboard;
             sb.Stop();
             mergingLabel.Content = "Finished Merging!";
+            InvokeIfRequired(() =>
+            {
+                ModMana.Update();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            });
+            Task.Delay(5000).ContinueWith(t =>
+            {
+                Dispatcher.Invoke(() => { mergingLabel.Visibility = Visibility.Hidden; },
+                    DispatcherPriority.ApplicationIdle);
+            });
         }
 
+        /// <summary>
+        /// Workers the on progress changed.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="progressChangedEventArgs">The <see cref="ProgressChangedEventArgs"/> instance containing the event data.</param>
         private void WorkerOnProgressChanged(object sender, ProgressChangedEventArgs progressChangedEventArgs)
         {
             mergeProgressBar.Value = progressChangedEventArgs.ProgressPercentage;
         }
 
+        /// <summary>
+        /// Workers the do work.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="DoWorkEventArgs"/> instance containing the event data.</param>
         private void WorkerDoWork(object sender, DoWorkEventArgs e)
         {
             Logger.Log("Starting to merge");
-            var count = 3;
             var done = 0;
+            var filesToMerge = new List<ModFile>();
 
-            foreach (var conflict in conflicts) count += conflict.Value.Count;
+            foreach (var conflict in conflicts)
+            {
+                if (conflict.Value != null)
+                {
+                    filesToMerge.AddRange(conflict.Value);
+                }
+            }
 
-            Logger.Log("Merging " + count + " files");
+            if (Settings.Default.CopyAllFiles)
+            {
+                foreach (ModFile modManaModFile in ModMana.ModFiles)
+                {
+                    filesToMerge.Add(modManaModFile);
+                }
+            }
+
+            filesToMerge = filesToMerge.Distinct().ToList();
+
+            Logger.Log("Merging " + filesToMerge.Count + " files");
+
+            var modExtractedFiles = new Dictionary<string, string>();
 
             worker.ReportProgress(0);
 
-            foreach (var keyValuePair in conflicts)
+            foreach (var fileToMerge in filesToMerge)
             {
-                Logger.Log("Trying to find ModFile for " + keyValuePair.Value[0].ModName + " " +
-                           keyValuePair.Value[0].FileName);
-                var foundModFile = ModMana.ModFiles.FirstOrDefault(modfile =>
-                    modfile.ModName == keyValuePair.Value[0].ModName &&
-                    modfile.FileName == keyValuePair.Value[0].FileName);
-                var vanillaExtractedFile = ModMana.ExtractVanillaFile(foundModFile);
-
-                if (foundModFile == null) Logger.Log("Could not find ModFile...This is bad!");
-
-                var modExtractedFiles = new List<string>();
-                var actualFiles = new List<ModFile>();
-
-                // Sufficiently documented in Subroutines
-                foreach (var modFile in keyValuePair.Value)
+                if (fileToMerge != null)
                 {
-                    var actualFile = ModMana.ModFiles.FirstOrDefault(file =>
-                        file.ModName == modFile.ModName && file.FileName == modFile.FileName);
-                    actualFiles.Add(actualFile);
-                    modExtractedFiles.Add(ModMana.ExtractFile(actualFile));
-                }
+                    string baseFile = !modExtractedFiles.ContainsKey(fileToMerge.FileName)
+                        ? ModMana.ExtractVanillaFile(fileToMerge)
+                        : modExtractedFiles[fileToMerge.FileName];
 
-                var outputFile = ModMana.MergeFiles(vanillaExtractedFile, modExtractedFiles[0]);
+                    if (baseFile == "" || baseFile == "")
+                    {
+                        Logger.Log("No base file found for " + fileToMerge.FileName, true);
+                    }
 
-                if (deleteOldFiles) actualFiles[0].Delete();
+                    // Sufficiently documented in Subroutine
+                    var extractedFile = ModMana.ExtractFile(fileToMerge);
 
-                done++;
-                worker.ReportProgress((int) (done / (float) count * 100.0f));
+                    // Sufficiently documented in Subroutine
+                    var outputFile = ModMana.MergeFiles(baseFile, extractedFile);
 
-                for (var i = 1; i < modExtractedFiles.Count; i++)
-                {
-                    outputFile = ModMana.MergeFiles(outputFile, modExtractedFiles[i]);
-                    actualFiles[i].Delete();
+                    modExtractedFiles[fileToMerge.FileName] = outputFile;
+
+                    if (Settings.Default.DeleteOldFiles) fileToMerge.Delete();
+
                     done++;
-                    worker.ReportProgress((int) (done / (float) count * 100.0f));
+                    worker.ReportProgress((int) (done / (float) filesToMerge.Count * 100.0f));
+                }
+                else
+                {
+                    Logger.Log("ModFile was null for some reason!");
                 }
             }
 
             // Documented in Subroutines
             ModMana.PakData();
             done++;
-            worker.ReportProgress((int) (done / (float) count * 100.0f));
+            worker.ReportProgress((int) (done / (float) filesToMerge.Count * 100.0f));
             ModMana.PakLocalization();
             done++;
-            worker.ReportProgress((int) (done / (float) count * 100.0f));
+            worker.ReportProgress((int) (done / (float) filesToMerge.Count * 100.0f));
             ModMana.CopyMergedToMods();
             done++;
-            worker.ReportProgress((int) (done / (float) count * 100.0f));
+            worker.ReportProgress((int) (done / (float) filesToMerge.Count * 100.0f));
+
             Logger.Log("Finished Merge Job!");
-            Dispatcher.Invoke(() => { ModMana.Update(); });
         }
 
+        /// <summary>
+        /// Updates the usages.
+        /// </summary>
+        /// <param name="state">The state.</param>
         private void UpdateUsages(object state)
         {
-            if (!Dispatcher.CheckAccess())
+            if (isInformationVisible)
             {
-                Dispatcher.Invoke(() =>
+                var cpu = Math.Round(cpuCounter.NextValue()) + "%";
+                var ram = App.ConvertToHighest((long) ramCounter.NextValue()) + " (" +
+                          App.ConvertToHighest((long) availableRamRounter.NextValue()) + " Available)";
+                var io = App.ConvertToHighest((long) diskCounter.NextValue()) + "/sec";
+                var threads = threadsCounter.NextValue() + " Threads (" + Process.GetCurrentProcess().Threads.Count +
+                              " Including CLR)";
+
+                InvokeIfRequired(() =>
                 {
-                    cpuUsage.Content = Math.Round(cpuCounter.NextValue()) + "%";
-                    ramUsage.Content = App.ConvertToHighest((long) ramCounter.NextValue()) + " (" +
-                                       App.ConvertToHighest((long) availableRamRounter.NextValue()) + " Available)";
-                    ioUsage.Content = App.ConvertToHighest((long) diskCounter.NextValue()) + "/sec";
+                    cpuUsage.Content = cpu;
+                    ramUsage.Content = ram;
+                    ioUsage.Content = io;
+                    threadsCounterValue.Content = threads;
                 });
-            }
-            else
-            {
-                cpuUsage.Content = Math.Round(cpuCounter.NextValue()) + "%";
-                ramUsage.Content = App.ConvertToHighest((long) ramCounter.NextValue()) + " (" +
-                                   App.ConvertToHighest((long) availableRamRounter.NextValue()) + " Available)";
-                ioUsage.Content = App.ConvertToHighest((long) diskCounter.NextValue()) + "/sec";
             }
         }
 
-        private void UpdateStuff(object sender, PropertyChangedEventArgs e)
+        /// <summary>
+        /// Modsmanager change listener.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+        private void ModManaChangeListener(object sender, PropertyChangedEventArgs args)
         {
-            Logger.Log("Updating Stuff");
-            ModNames = ModMana.ModNames;
-            Files = ModMana.Conflicts;
-            Logger.Log("Found " + ModMana.ModNames.Count + " Mods!");
-            Logger.Log("Found " + ModMana.Conflicts.Count + " Conflicts!");
+            // We do not want any updates while merging. The stuff is updated afterwards anyways.
+            if (!isMerging)
+            {
+                if (args.PropertyName == nameof(ModMana.ModFiles) || args.PropertyName == nameof(ModMana.Conflicts))
+                {
+                    UpdateConflicts();
+                }
+            }
+        }
 
-            Logger.Log("Updating saved conflicts");
+        /// <summary>
+        /// Updates the conflicts.
+        /// </summary>
+        private void UpdateConflicts()
+        {
+            Logger.Log("Updating Conflicts");
 
-            foreach (var selectedFile in files)
+            foreach (var selectedFile in ModMana.Conflicts)
             {
                 var modF = ModMana.ModFiles.Where(file => file.FileName.Equals(selectedFile));
 
@@ -278,38 +370,24 @@ namespace KCDModMerger
                 }
             }
 
-            var tempConflicts = new Dictionary<string, List<ModFile>>();
-
-            foreach (var conflict in conflicts)
-                if (files.Contains(conflict.Key))
-                {
-                    tempConflicts.Add(conflict.Key, new List<ModFile>());
-
-                    foreach (var modFile in conflict.Value)
-                        if (ModMana.ModFiles.Contains(modFile))
-                            tempConflicts[conflict.Key].Add(modFile);
-                        else
-                            Logger.Log(modFile.FileName + " has no longer any conflicts!");
-                }
-                else
-                {
-                    Logger.Log(conflict.Key + " has no longer any conflicts!");
-                }
-
-            conflicts = tempConflicts;
-
             Logger.Log("Updated Conflicts to " + conflicts.Count + " different files!");
-            Logger.Log("Saving Conflicts");
 
-            Settings.Default.Conflicts = JsonConvert.SerializeObject(conflicts);
-            Settings.Default.Save();
-
-            Logger.Log("Saved Conflicts!");
-            Logger.Log("Updated Stuff!");
+            if (conflicts.Count > 0)
+            {
+                mergeButton.EnableButton();
+            }
+            else
+            {
+                mergeButton.DisableButton("You don't have any conflicts to merge!");
+            }
         }
 
-
-        private void ShowFolderDialog()
+        /// <summary>
+        /// Handles the Click event of the KcdFolderDialogButton control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private void KcdFolderDialogButton_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new FolderBrowserDialog {SelectedPath = textBox.Text};
 
@@ -318,44 +396,57 @@ namespace KCDModMerger
             if (result == System.Windows.Forms.DialogResult.OK || result == System.Windows.Forms.DialogResult.Yes)
             {
                 Settings.Default.KCDPath = dialog.SelectedPath;
-                Settings.Default.Save();
             }
         }
 
-        private void KcdFolderDialogButton_Click(object sender, RoutedEventArgs e)
-        {
-            ShowFolderDialog();
-        }
-
+        /// <summary>
+        /// Handles the SelectionChanged event of the modList control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="SelectionChangedEventArgs"/> instance containing the event data.</param>
         private void modList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (modList.SelectedIndex != -1)
             {
-                var selectedMod = ModMana.Mods[modList.SelectedIndex];
+                //var selectedMod = ModMana.Mods[modList.SelectedIndex];
+                if (e.RemovedItems.Count > 0)
+                {
+                    var lastIndex = ModMana.ModNames.IndexOf((string) e.RemovedItems[0]);
+                    ModMana.Mods[lastIndex].manifest.PropertyChanged -= humanReadableInfoChanged;
+                }
 
-                modInfo.Text = selectedMod.DisplayName + Environment.NewLine + "Version: " + selectedMod.Version +
-                               Environment.NewLine + "Author: " +
-                               selectedMod.Author + Environment.NewLine + "Created On: " + selectedMod.CreatedOn +
-                               Environment.NewLine +
-                               selectedMod.Description + Environment.NewLine +
-                               (selectedMod.VersionsSupported.Length > 0
-                                   ? "Supported Versions:" + Environment.NewLine +
-                                     Environment.NewLine + string.Join(Environment.NewLine,
-                                         selectedMod.VersionsSupported)
-                                   : "") +
-                               (selectedMod.MergedFiles.Length > 0
-                                   ? "Merged Files:" + Environment.NewLine +
-                                     Environment.NewLine + string.Join(Environment.NewLine + Environment.NewLine,
-                                         selectedMod.MergedFiles)
-                                   : "");
+                var selectedMod =
+                    ModMana.Mods.FirstOrDefault(mod => mod.manifest.DisplayName == (string) modList.SelectedItem);
+
+                if (selectedMod != null)
+                {
+                    selectedMod.manifest.PropertyChanged += humanReadableInfoChanged;
+
+                    modInfo.Text = selectedMod.manifest.HumanReadableInfo;
+                }
             }
         }
 
+        /// <summary>
+        /// Humans readable information changed.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+        private void humanReadableInfoChanged(object sender, PropertyChangedEventArgs e)
+        {
+            modInfo.Text = ModMana.Mods[modList.SelectedIndex].manifest.HumanReadableInfo;
+        }
+
+        /// <summary>
+        /// Handles the SelectionChanged event of the conflictFilesList control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="SelectionChangedEventArgs"/> instance containing the event data.</param>
         private void conflictFilesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (conflictFilesList.SelectedIndex != -1)
             {
-                var selectedFile = files[conflictFilesList.SelectedIndex];
+                var selectedFile = (string) conflictFilesList.SelectedItem;
 
                 conflictingModsList.ItemsSource = conflicts[selectedFile].Select(file => file.ModName);
                 conflictingModsList.Visibility = Visibility.Visible;
@@ -372,6 +463,11 @@ namespace KCDModMerger
             }
         }
 
+        /// <summary>
+        /// Handles the Click event of the launchKdiff control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void launchKdiff_Click(object sender, RoutedEventArgs e)
         {
             Logger.Log("Launching KDiff on " + conflictFilesList.SelectedItem + "(" + conflictingModsList.SelectedItem +
@@ -394,36 +490,44 @@ namespace KCDModMerger
             ModMana.RunKDiff3("\"" + vanillaExtractedFile + "\" \"" + modExtractedFile + "\"");
         }
 
+        /// <summary>
+        /// Handles the SelectionChanged event of the conflictingModsList control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="SelectionChangedEventArgs"/> instance containing the event data.</param>
         private void conflictingModsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (conflictingModsList.SelectedIndex != -1)
-                launchKdiff.Visibility = Visibility.Visible;
+                launchKdiff.EnableButton();
             else
-                launchKdiff.Visibility = Visibility.Hidden;
+                launchKdiff.DisableButton(
+                    "You need to select a conflicting file and a corresponding mod in the lists on the right to do this!");
         }
 
+        /// <summary>
+        /// Handles the Click event of the mergeButton control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void mergeButton_Click(object sender, RoutedEventArgs e)
         {
             Logger.Log("Starting Merge Worker!");
-            Logger.Log("Asking user if they want to delete old files");
-            var result = MessageBox.Show("Do you want to delete the files after they were merged?", "KCDModMerger",
-                MessageBoxButton.YesNo);
-
-            if (result == MessageBoxResult.OK || result == MessageBoxResult.Yes)
-                deleteOldFiles = true;
-            else
-                deleteOldFiles = false;
-
-            Logger.Log("Delete Old Files: " + deleteOldFiles, true);
 
             worker.RunWorkerAsync();
             isMerging = true;
-            mergeProgressBar.Visibility = isMerging ? Visibility.Visible : Visibility.Hidden;
-            mergingLabel.Visibility = isMerging ? Visibility.Visible : Visibility.Hidden;
+            mergeProgressBar.Visibility = Visibility.Visible;
+            mergingLabel.Visibility = Visibility.Visible;
+            mergeButton.Visibility = Visibility.Hidden;
+            options.IsExpanded = false;
             var sb = FindResource("MergingAnimation") as Storyboard;
             sb.Begin();
         }
 
+        /// <summary>
+        /// Handles the Click event of the clearCache control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void clearCache_Click(object sender, RoutedEventArgs e)
         {
             Settings.Default.Reset();
@@ -432,14 +536,58 @@ namespace KCDModMerger
             clearCache.Content = "Cleared!";
 
             Task.Delay(5000)
-                .ContinueWith(t => { Dispatcher.Invoke(() => { clearCache.Content = originalContentTM; }); });
+                .ContinueWith(t =>
+                {
+                    Dispatcher.Invoke(() => { clearCache.Content = originalContentTM; },
+                        DispatcherPriority.ApplicationIdle);
+                });
         }
 
+        /// <summary>
+        /// Handles the Click event of the openLogFile control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void openLogFile_Click(object sender, RoutedEventArgs e)
         {
             Logger.LogToFile(null);
 
             Process.Start(@"" + Logger.LOG_FILE);
+        }
+
+        /// <summary>
+        /// Handles the OnCollapsed event of the AdditonalInformationExpander control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private void AdditonalInformationExpander_OnCollapsed(object sender, RoutedEventArgs e)
+        {
+            isInformationVisible = false;
+            additonalInformationExpander.Header = "Expand";
+            additonalInformationExpander.ToolTip = "Additional Information";
+        }
+
+        /// <summary>
+        /// Handles the OnExpanded event of the AdditonalInformationExpander control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private void AdditonalInformationExpander_OnExpanded(object sender, RoutedEventArgs e)
+        {
+            isInformationVisible = true;
+            additonalInformationExpander.Header = "Collapse";
+            additonalInformationExpander.ToolTip = null;
+            UpdateUsages(null);
+        }
+
+        /// <summary>
+        /// Handles the OnLostFocus event of the TextBox control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private void TextBox_OnLostFocus(object sender, RoutedEventArgs e)
+        {
+            Settings.Default.KCDPath = textBox.Text;
         }
 
         #region DragNDrop
@@ -493,7 +641,7 @@ namespace KCDModMerger
 
         private void Move(string source, int sourceIndex, int targetIndex)
         {
-            var selectedFile = files[conflictFilesList.SelectedIndex];
+            var selectedFile = (string) conflictFilesList.SelectedItem;
             var sourceModFile = conflicts[selectedFile].FirstOrDefault(file => file.ModName == source);
             if (sourceIndex < targetIndex)
             {
@@ -509,9 +657,6 @@ namespace KCDModMerger
                     conflicts[selectedFile].RemoveAt(removeIndex);
                 }
             }
-
-            Settings.Default.Conflicts = JsonConvert.SerializeObject(conflicts);
-            Settings.Default.Save();
 
             conflictingModsList.ItemsSource = conflicts[selectedFile].Select(file => file.ModName);
         }

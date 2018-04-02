@@ -1,38 +1,49 @@
-﻿using System;
+﻿#region usings
+
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.IO.Packaging;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Security.AccessControl;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using System.Xml;
 using KCDModMerger.Annotations;
+using KCDModMerger.Mods;
 using KCDModMerger.Properties;
 using Newtonsoft.Json;
 using Formatting = Newtonsoft.Json.Formatting;
 
+#endregion
+
 namespace KCDModMerger
 {
-    internal class ModManager : INotifyPropertyChanged
+    public class ModManager : INotifyPropertyChanged
     {
         private const string VERSION = "1.3 'Logginus Lanze'";
-        internal readonly List<string> ModNames = new List<string>();
-        internal readonly List<Mod> Mods = new List<Mod>();
-        internal readonly List<ModFile> ModFiles = new List<ModFile>();
-        internal readonly List<string> Conflicts = new List<string>();
         private const string TEMP_FILES = "\\TempFiles";
         private const string TEMP_MERGED_DIR = "\\MergedFiles";
         private const string MODMANAGER_DIR = "\\ModMerger";
         private const string MERGED_MOD = "\\zzz_ModMerger";
+        private readonly List<string> _mergedFiles = new List<string>();
+        internal readonly ObservableCollection<string> Conflicts = new ObservableCollection<string>();
+        internal readonly List<ModFile> ModFiles = new List<ModFile>();
+        internal readonly ObservableCollection<string> ModNames = new ObservableCollection<string>();
+        internal readonly List<Mod> Mods = new List<Mod>();
         private string OLD_ROOT_FOLDER = Settings.Default.KCDPath;
-        private List<string> _mergedFiles = new List<string>();
 
+        private Timer timer;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ModManager"/> class.
+        /// </summary>
         internal ModManager()
         {
             Settings.Default.PropertyChanged += SettingsChanged;
@@ -45,6 +56,15 @@ namespace KCDModMerger
             }
         }
 
+        /// <summary>
+        /// Occurs when a property value changes.
+        /// </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Updates this instance.
+        /// </summary>
+        /// <returns></returns>
         internal bool Update()
         {
             var shouldUpdate = Settings.Default.KCDPath != "" &&
@@ -57,6 +77,24 @@ namespace KCDModMerger
 
             if (shouldUpdate)
             {
+                var freeSpace = GetTotalFreeSpace(Settings.Default.KCDPath.Split('\\').First() + "\\");
+
+                if (freeSpace != -1)
+                {
+                    Logger.Log("Free Space on Drive " + Settings.Default.KCDPath.Split(':').First() + " is " +
+                               App.ConvertToHighest(freeSpace),
+                        true);
+
+                    if (freeSpace < (100 /*MB*/ * 1024f /*KB*/ * 1024f /*Bytes*/))
+                    {
+                        MessageBox.Show(
+                            "There are only " + App.ConvertToHighest(freeSpace) + " left on this drive!",
+                            "KCDModMerger",
+                            MessageBoxButton.OK);
+                    }
+                }
+
+
                 CreateModdingDirectory();
                 UpdateModList();
             }
@@ -69,24 +107,22 @@ namespace KCDModMerger
                 Conflicts.Clear();
                 Logger.Log("Cleared previously found Stuff!");
 
-                Logger.Log("Notifying Listeners");
-
                 OnPropertyChanged();
-
-                Logger.Log("Notified Listeners!");
             }
 
             return shouldUpdate;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
+        /// <summary>
+        /// Runs the kdiff3.
+        /// </summary>
+        /// <param name="args">The arguments.</param>
         internal void RunKDiff3(string args)
         {
             Logger.Log("Starting KDiff with args: " + args, true);
             Process process = new Process();
             process.StartInfo.FileName =
-                Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(ModManager)).Location) +
+                Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) +
                 "\\Tools\\KDiff3\\kdiff3.exe";
             process.StartInfo.Arguments = args;
             process.Start();
@@ -94,11 +130,17 @@ namespace KCDModMerger
             Logger.Log("Kdiff Finished!");
         }
 
+        /// <summary>
+        /// Creates the modding directory.
+        /// </summary>
+        /// <returns></returns>
         internal string CreateModdingDirectory()
         {
             if (OLD_ROOT_FOLDER != "")
             {
+                Logger.Log("Deleting Old Folder");
                 DeleteFolder(OLD_ROOT_FOLDER + MODMANAGER_DIR);
+                Logger.Log("Deleted Old Folder!");
             }
 
             OLD_ROOT_FOLDER = Settings.Default.KCDPath;
@@ -130,6 +172,9 @@ namespace KCDModMerger
             return dir.FullName;
         }
 
+        /// <summary>
+        /// Copies the merged files to mods.
+        /// </summary>
         internal void CopyMergedToMods()
         {
             Logger.Log("Copying Files from Merged to " + MERGED_MOD);
@@ -189,6 +234,11 @@ namespace KCDModMerger
             Logger.Log("Copied Files to " + MERGED_MOD, true);
         }
 
+        /// <summary>
+        /// Copies the files recursively.
+        /// </summary>
+        /// <param name="source">The source.</param>
+        /// <param name="target">The target.</param>
         private void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
         {
             foreach (DirectoryInfo dir in source.GetDirectories())
@@ -247,6 +297,12 @@ namespace KCDModMerger
             }
         }
 
+        /// <summary>
+        /// Merges the files.
+        /// </summary>
+        /// <param name="baseFile">The base file.</param>
+        /// <param name="overwriteFile">The overwrite file.</param>
+        /// <returns></returns>
         internal string MergeFiles(string baseFile, string overwriteFile)
         {
             Logger.Log("Merging " + baseFile + " and " + overwriteFile);
@@ -293,8 +349,9 @@ namespace KCDModMerger
                         }
                     }
 
-                    var destFile = destFolder + "\\" +
-                                   (subDirs != null ? string.Join("\\", subDirs) : "") + "\\" + fileName;
+                    var destFile = (destFolder + "\\" +
+                                    (subDirs != null ? string.Join("\\", subDirs) + "\\" : "") + fileName)
+                        .Replace("\\\\", "\\");
 
                     Logger.Log("Copying " + overwriteFile + " to " + destFile);
 
@@ -355,8 +412,9 @@ namespace KCDModMerger
                     }
                 }
 
-                var destFile = destFolder + "\\" +
-                               (subDirs != null ? string.Join("\\", subDirs) : "") + "\\" + fileName;
+                var destFile = (destFolder + "\\" +
+                                (subDirs != null ? string.Join("\\", subDirs) + "\\" : "") + fileName)
+                    .Replace("\\\\", "\\");
 
                 RunKDiff3("\"" + baseFile + "\" \"" + overwriteFile + "\" -o \"" + destFile + "\" --auto");
 
@@ -385,6 +443,11 @@ namespace KCDModMerger
             }
         }
 
+        /// <summary>
+        /// Extracts the file from zip.
+        /// </summary>
+        /// <param name="file">The file.</param>
+        /// <returns></returns>
         internal string ExtractFile(ModFile file)
         {
             Logger.Log("Extracting " + file.FileName + " from " + file.ModName + " in " + file.PakFile);
@@ -425,6 +488,11 @@ namespace KCDModMerger
             return "";
         }
 
+        /// <summary>
+        /// Extracts the vanilla file from zip.
+        /// </summary>
+        /// <param name="file">The file.</param>
+        /// <returns></returns>
         internal string ExtractVanillaFile(ModFile file)
         {
             Logger.Log("Extracting " + file.FileName + " from Vanilla");
@@ -471,7 +539,7 @@ namespace KCDModMerger
             {
                 var pakFile = FindVanillaDataFile(file.FileName);
 
-                if (pakFile != String.Empty)
+                if (pakFile != string.Empty)
                 {
                     using (FileStream fs = new FileStream(pakFile, FileMode.Open))
                     {
@@ -507,6 +575,9 @@ namespace KCDModMerger
             return "";
         }
 
+        /// <summary>
+        /// Paks the data.
+        /// </summary>
         internal void PakData()
         {
             Logger.Log("Packing Data Archive");
@@ -514,11 +585,35 @@ namespace KCDModMerger
             var dir = Directory.CreateDirectory(rootDir);
             dir.CreateSubdirectory("Data");
 
+            Logger.Log("Adding Startup Script");
+
+            var scriptsDir = Directory.CreateDirectory(Settings.Default.KCDPath + MODMANAGER_DIR + TEMP_MERGED_DIR +
+                                                       "\\Data\\Scripts");
+            scriptsDir.CreateSubdirectory("Startup");
+
+            using (FileStream fs =
+                File.Open(
+                    Settings.Default.KCDPath + MODMANAGER_DIR + TEMP_MERGED_DIR +
+                    "\\Data\\Scripts\\Startup\\KCDModMerger.lua", FileMode.Create))
+            {
+                using (StreamWriter file = new StreamWriter(fs))
+                {
+                    file.Write("System.LogAlways(string.format(\"$5[INFO] Loaded KCDModMerger Merged Mods!\"))" +
+                               Environment.NewLine + "System.LogAlways(string.format(\"$5[INFO] Files: " +
+                               string.Join(", ", _mergedFiles) + "\"))");
+                }
+            }
+
+            Logger.Log("Added Startup Script!");
+
             ZipFile.CreateFromDirectory(Settings.Default.KCDPath + MODMANAGER_DIR + TEMP_MERGED_DIR + "\\Data",
                 rootDir + "\\Data\\data.pak");
             Logger.Log("Packed Data Archive!");
         }
 
+        /// <summary>
+        /// Paks the localization.
+        /// </summary>
         internal void PakLocalization()
         {
             Logger.Log("Packing Localization Archives");
@@ -541,6 +636,12 @@ namespace KCDModMerger
             Logger.Log("Packed Localization Archives!");
         }
 
+        /// <summary>
+        /// Creates the directories.
+        /// </summary>
+        /// <param name="file">The file.</param>
+        /// <param name="vanilla">if set to <c>true</c> creates directories for vanilla file.</param>
+        /// <returns></returns>
         private string CreateDirectories(ModFile file, bool vanilla)
         {
             Logger.Log("Creating Directories in " + TEMP_FILES + " for " + file.FileName +
@@ -596,27 +697,67 @@ namespace KCDModMerger
             return rootFolder + "\\" + subdirectory + localizationSubDirectry;
         }
 
+        /// <summary>
+        /// Finds the vanilla data file.
+        /// </summary>
+        /// <param name="file">The file.</param>
+        /// <returns></returns>
         private string FindVanillaDataFile(string file)
         {
             Logger.Log("Finding Vanilla Data File for " + file);
-            Logger.Log("Loading Saved Vanilla Data File Paths");
-            var saved = JsonConvert.DeserializeObject<Dictionary<string, string>>(Settings.Default.FilePaths);
-            Logger.Log("Loaded Saved Vanilla Data File Paths!");
+
+            Dictionary<string, List<string>> saved = null;
+
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\VanillaFiles.json"))
+            {
+                Logger.Log("Loading Saved Vanilla Data File Paths");
+                using (StreamReader fs =
+                    new StreamReader(AppDomain.CurrentDomain.BaseDirectory + "\\VanillaFiles.json"))
+                {
+                    var json = fs.ReadToEnd();
+                    saved = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(json);
+                    Logger.Log("Loaded Saved Vanilla Data File Paths!");
+                }
+            }
 
             if (saved == null)
             {
                 Logger.Log("Saved Vanilla Data Files are empty, creating");
-                saved = new Dictionary<string, string>();
+                saved = new Dictionary<string, List<string>>();
                 Logger.Log("Saved Vanilla Data Files created!");
             }
 
-            if (saved.ContainsKey(file))
+            var savedPak = saved.FirstOrDefault(pair => pair.Value.Contains(file));
+
+            if (!savedPak.IsDefault())
             {
-                Logger.Log(file + ": was found in saved!");
-                if (File.Exists(saved[file]))
+                Logger.Log(file + " was found in saved!");
+                if (File.Exists(savedPak.Key))
                 {
-                    Logger.Log(file + ": pak file still exists!");
-                    return saved[file];
+                    Logger.Log(file + " found saved pak file " + savedPak.Key, true);
+                    using (FileStream fs = File.OpenRead(savedPak.Key))
+                    {
+                        using (ZipArchive zip = new ZipArchive(fs))
+                        {
+                            var entry = zip.Entries.FirstOrDefault(zipEntry => zipEntry.FullName == file);
+
+                            if (entry != null)
+                            {
+                                Logger.Log(file + " still exists in pak!");
+
+                                // No need to save, nothing changed
+                                return savedPak.Key;
+                            }
+
+                            Logger.Log(file + " doesn't exist in pak anymore!");
+                            savedPak.Value.Remove(file);
+                        }
+                    }
+                }
+                else
+                {
+                    Logger.Log(savedPak.Key + " doesn't exist anymore!");
+                    saved.Remove(savedPak.Key);
                 }
             }
 
@@ -638,17 +779,19 @@ namespace KCDModMerger
                         {
                             if (zip.Entries.Count > 0)
                             {
+                                saved[pak] = new List<string>();
+                                foreach (ZipArchiveEntry zipArchiveEntry in zip.Entries)
+                                {
+                                    saved[pak].Add(zipArchiveEntry.FullName);
+                                }
+
                                 var srcFile = zip.Entries.FirstOrDefault(entry => entry.FullName.Equals(file));
 
                                 if (srcFile != null)
                                 {
                                     Logger.Log(file + " found in " + pak, true);
-                                    Logger.Log("Saving");
-                                    saved[file] = pak;
-                                    Settings.Default.FilePaths =
-                                        JsonConvert.SerializeObject(saved, Formatting.Indented);
-                                    Settings.Default.Save();
-                                    Logger.Log("Saved!");
+
+                                    SaveVanillaFilePaths(saved);
 
                                     return pak;
                                 }
@@ -657,10 +800,7 @@ namespace KCDModMerger
                     }
                     catch (Exception e)
                     {
-#if DEBUG
-                        Debug.WriteLine(e);
-#endif
-                        Logger.Log(pak + ": could not be opened!");
+                        Logger.Log(pak + ": could not be opened! (This is not a critical issue!) " + e.Message);
                     }
                 }
             }
@@ -670,6 +810,30 @@ namespace KCDModMerger
             return "";
         }
 
+        /// <summary>
+        /// Saves the vanilla file paths.
+        /// </summary>
+        /// <param name="saved">The saved.</param>
+        private void SaveVanillaFilePaths(Dictionary<string, List<string>> saved)
+        {
+            Logger.Log("Saving Vanilla File Paths");
+            var file = AppDomain.CurrentDomain.BaseDirectory + "\\VanillaFiles.json";
+            if (File.Exists(file))
+            {
+                File.Delete(file);
+            }
+
+            using (StreamWriter sw = File.CreateText(AppDomain.CurrentDomain.BaseDirectory + "\\VanillaFiles.json"))
+            {
+                sw.Write(JsonConvert.SerializeObject(saved, Formatting.Indented));
+            }
+
+            Logger.Log("Saved!");
+        }
+
+        /// <summary>
+        /// Scans the data dir.
+        /// </summary>
         private void ScanDataDir()
         {
             Logger.Log("Scanning Data Directory for Mods");
@@ -739,9 +903,12 @@ namespace KCDModMerger
             }
         }
 
+        /// <summary>
+        /// Updates the mod list.
+        /// The actual Update is threaded!
+        /// </summary>
         private void UpdateModList()
         {
-            Logger.Log("Updating Mods List");
             Mods.Clear();
             ModNames.Clear();
             Conflicts.Clear();
@@ -753,43 +920,115 @@ namespace KCDModMerger
 
             Logger.Log("Found " + folders.Length + " Mods!");
 
+            List<string> tempFiles = new List<string>();
+            var tasks = new Task[folders.Length];
+            var index = 0;
+
             foreach (var folder in folders)
             {
-                Logger.Log("Adding Mod " + folder.Split('\\').Last());
-                Mods.Add(new Mod(folder));
+                Logger.Log("Checking if " + folder.Split('\\').Last() + " is a valid mod directory");
+
+                var files = Directory.GetFiles(folder, "*", SearchOption.AllDirectories);
+
+                if (files.Any(file => file.EndsWith(".manifest") || file.EndsWith(".pak")))
+                {
+                    Logger.Log(folder.Split('\\').Last() + " looks like a Mod!");
+                    Logger.Log("Adding Mod " + folder.Split('\\').Last());
+
+                    tasks[index] = Task.Factory.StartNew(() =>
+                    {
+                        var logger = new StringBuilder();
+                        var mod = new Mod(folder, logger);
+
+                        logger.AppendLine(
+                            Logger.BuildLogWithDate("Adding Mod " + mod.manifest.DisplayName + " to Global Storage"));
+
+                        MainWindow.dispatcherGlobal.Invoke(() => { ModNames.Add(mod.manifest.DisplayName); },
+                            DispatcherPriority.ApplicationIdle);
+
+                        lock (tempFiles)
+                        {
+                            foreach (ModFile modFile in mod.DataFiles)
+                            {
+                                tempFiles.Add(modFile.FileName);
+                            }
+                        }
+
+                        lock (ModFiles)
+                        {
+                            ModFiles.AddRange(mod.DataFiles);
+                        }
+
+                        lock (_mergedFiles)
+                        {
+                            _mergedFiles.AddRange(mod.MergedFiles);
+                        }
+
+                        lock (Mods)
+                        {
+                            Mods.Add(mod);
+                        }
+
+                        logger.AppendLine(
+                            Logger.BuildLogWithDate("Added " + mod.manifest.DisplayName + " to Global Storage!"));
+
+                        Logger.Log(logger);
+
+                        return mod;
+                    });
+                    index++;
+                }
+                else
+                {
+                    Logger.Log(folder.Split('\\').Last() + " does not look like a valid mod directory!");
+                }
             }
 
-            List<string> tempFiles = new List<string>();
-
-            foreach (var mod in Mods)
+            Task.Factory.ContinueWhenAll(tasks, tasksCompleted =>
             {
-                Logger.Log("Adding Mod " + mod.DisplayName + " to Global Storage");
-                ModNames.Add(mod.DisplayName);
+                var sb = new StringBuilder();
 
-                foreach (ModFile modFile in mod.DataFiles)
+                lock (tempFiles)
                 {
-                    tempFiles.Add(modFile.FileName);
+                    tempFiles.Sort(string.Compare);
                 }
 
-                ModFiles.AddRange(mod.DataFiles);
-                _mergedFiles.AddRange(mod.MergedFiles);
-            }
+                lock (ModFiles)
+                {
+                    ModFiles.Sort((x, y) => string.CompareOrdinal(x.ModName, y.ModName));
+                }
 
-            Logger.Log("Added Mods to Global Storage!");
-            Logger.Log("Finding Conflicts");
+                lock (Mods)
+                {
+                    Mods.Sort((x, y) => string.CompareOrdinal(x.manifest.DisplayName, y.manifest.DisplayName));
+                }
 
-            var duplicates =
-                new HashSet<string>(tempFiles.GroupBy(x => x).Where(x => x.Skip(1).Any()).Select(x => x.Key));
-            Conflicts.AddRange(duplicates);
+                sb.AppendLine(Logger.BuildLogWithDate("Finding Conflicts"));
 
-            Logger.Log("Found " + duplicates.Count + " Conflicts!");
-            Logger.Log("Notifying Listeners");
+                var duplicates = new HashSet<string>(tempFiles.GroupBy(x => x).Where(x => x.Skip(1).Any())
+                    .Select(x => x.Key));
 
-            OnPropertyChanged();
+                MainWindow.dispatcherGlobal.Invoke(() =>
+                {
+                    foreach (string duplicate in duplicates)
+                    {
+                        Conflicts.Add(duplicate);
+                    }
+                });
 
-            Logger.Log("Notified Listeners!");
+                sb.AppendLine(Logger.BuildLogWithDate("Found " + duplicates.Count + " Conflicts!"));
+
+                OnPropertyChanged(nameof(Conflicts));
+
+                Logger.Log(sb);
+            });
         }
 
+        /// <summary>
+        /// Gets all folders.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns></returns>
         private string[] GetFolders(string path)
         {
             Logger.Log("Finding Folders in " + path);
@@ -809,23 +1048,60 @@ namespace KCDModMerger
             return new List<string>().ToArray();
         }
 
+        /// <summary>
+        /// Settings changed.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         private void SettingsChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "KCDPath")
             {
                 Logger.Log("KCD Root Path changed to " + Settings.Default.KCDPath, true);
-                var isValid = Update();
-
-                if (!isValid)
+                if (!MainWindow.isMerging)
                 {
-                    Logger.Log("Chosen KCD Path is not the KCD root folder!");
-                    MessageBox.Show("Chosen Path is not the root folder of KCD! " + Environment.NewLine +
-                                    "It should be something like ...\\KingdomComeDeliverance!", "KCDModMerger",
+                    var isValid = Update();
+
+                    if (!isValid)
+                    {
+                        Logger.Log("Chosen KCD Path is not the KCD root folder!");
+                        MessageBox.Show("Chosen Path is not the root folder of KCD! " + Environment.NewLine +
+                                        "It should be something like ...\\KingdomComeDeliverance!", "KCDModMerger",
+                            MessageBoxButton.OK);
+                    }
+                }
+                else
+                {
+                    Logger.Log("Update rejected because of ongoing merge operation!");
+                    MessageBox.Show("Change will be applied after ongoing merge operation is finished!", "KCDModMerger",
                         MessageBoxButton.OK);
                 }
             }
         }
 
+        /// <summary>
+        /// Gets the total free space.
+        /// </summary>
+        /// <param name="driveName">The drive name.</param>
+        /// <returns></returns>
+        private long GetTotalFreeSpace(string driveName)
+        {
+            var drives = DriveInfo.GetDrives();
+
+            var drive = drives.FirstOrDefault(info => info.IsReady && info.Name == driveName);
+
+            if (drive != null)
+            {
+                return drive.AvailableFreeSpace;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Deletes the folder.
+        /// </summary>
+        /// <param name="folder">The folder.</param>
         private void DeleteFolder(string folder)
         {
             Logger.Log("Deleting " + folder + " Directory");
@@ -839,9 +1115,9 @@ namespace KCDModMerger
                     }
                     catch (Exception e)
                     {
-                        Logger.Log("Tried deleting " + MODMANAGER_DIR + " Directory but " + e.Message);
+                        Logger.Log("Tried deleting " + folder + " Directory but " + e.Message);
                         var result =
-                            MessageBox.Show("Could not clean " + MODMANAGER_DIR +
+                            MessageBox.Show("Could not clean " + folder +
                                             " Directory! If you have it open in Window Explorer, please close it!",
                                 "KCDModMerger",
                                 MessageBoxButton.OK);
@@ -864,7 +1140,7 @@ namespace KCDModMerger
 
                     if (!Directory.Exists(folder))
                     {
-                        Logger.Log("Deleted " + MODMANAGER_DIR + " Directory!");
+                        Logger.Log("Deleted " + folder + " Directory!");
                         return;
                     }
                 }
@@ -886,7 +1162,24 @@ namespace KCDModMerger
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (timer == null)
+            {
+                timer = new Timer(state =>
+                {
+                    var sb = new StringBuilder();
+
+                    sb.AppendLine(Logger.BuildLogWithDate("Notifying ModManager Listeners"));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                    timer = null;
+                    sb.AppendLine(Logger.BuildLogWithDate("Notified ModManager Listeners!"));
+
+                    Logger.Log(sb);
+                }, null, 1000, Timeout.Infinite);
+            }
+            else
+            {
+                timer.Change(1000, Timeout.Infinite);
+            }
         }
     }
 }
