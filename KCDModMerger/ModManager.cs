@@ -27,7 +27,7 @@ namespace KCDModMerger
 {
     public class ModManager : INotifyPropertyChanged
     {
-        private const string VERSION = "1.3 'Logginus Lanze'";
+        private const string VERSION = "1.4 'Ariadnes Threads'";
         private const string TEMP_FILES = "\\TempFiles";
         private const string TEMP_MERGED_DIR = "\\MergedFiles";
         private const string MODMANAGER_DIR = "\\ModMerger";
@@ -913,6 +913,9 @@ namespace KCDModMerger
             ModNames.Clear();
             Conflicts.Clear();
             ModFiles.Clear();
+            _mergedFiles.Clear();
+
+            OnPropertyChanged(nameof(Conflicts));
 
             ScanDataDir();
 
