@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using KCDModMerger.Logging;
 using Microsoft.Win32;
 
 // http://www.codeproject.com/Articles/73000/Getting-Operating-System-Version-Info-Even-for-Win
@@ -17,6 +18,7 @@ namespace KCDModMerger
     /// <summary>
     ///     Provides detailed information about the host operating system.
     /// </summary>
+    [LogInterceptor]
     public static class OSVersionInfo
     {
         #region SERVICE PACK

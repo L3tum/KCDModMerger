@@ -50,7 +50,7 @@
                     RenderTransformOrigin="0.345,0.675" Height="23" Margin="9.667,12,12.667,0"
                     Click="KcdFolderDialogButton_Click" Grid.Column="2" />
             <ListView x:Name="modList" Margin="10,12,10,32.667"
-                      SelectionChanged="modList_SelectionChanged" SelectionMode="Single" Grid.Column="0"
+                      SelectionChanged="ModListSelectionChanged" SelectionMode="Single" Grid.Column="0"
                       ItemsSource="{Binding Source={StaticResource ModNamesVS}}" Width="Auto">
                 <ListView.View>
                     <GridView>
@@ -77,16 +77,21 @@
                            RenderTransformOrigin="0.501,-0.137" />
             </ScrollViewer>
             <ListView x:Name="conflictFilesList" Grid.Column="3" Margin="7.333,72,9.333,32.667" SelectionMode="Single"
-                      SelectionChanged="conflictFilesList_SelectionChanged">
+                      SelectionChanged="ConflictFilesListSelectionChanged" ItemsSource="{Binding Path=ModMana.Conflicts}">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn />
                     </GridView>
                 </ListView.View>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Path=Value.FileName}"></TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
             </ListView>
             <ListView x:Name="conflictingModsList" Grid.Column="4" Margin="8.667,72,9.667,32.667"
                       SelectionMode="Single"
-                      SelectionChanged="conflictingModsList_SelectionChanged">
+                      SelectionChanged="ConflictingModsListSelectionChanged">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn />
@@ -95,13 +100,13 @@
             </ListView>
             <Button x:Name="mergeButton" Content="Merge" Grid.Column="2" Margin="9.667,57,12.667,0"
                     VerticalAlignment="Top"
-                    Height="23" Click="mergeButton_Click" />
+                    Height="23" Click="MergeButtonClick" />
             <Label x:Name="conflictFilesLabel" Content="Conflicts" Grid.Column="3" Margin="5.333,41,12.333,0"
                    VerticalAlignment="Top" Height="26" />
             <Label x:Name="priorityLabel" Content="Priority" Grid.Column="4" Margin="8.667,41,8.667,0"
                    VerticalAlignment="Top" Height="26" />
             <Button x:Name="launchKdiff" Content="Launch KDiff3" Grid.Column="2" Margin="9.667,103,12.667,0"
-                    VerticalAlignment="Top" Height="23" Click="launchKdiff_Click" />
+                    VerticalAlignment="Top" Height="23" Click="LaunchKdiffClick" />
             <Label x:Name="lowerPriorityLabel" Content="Lower Priority" Grid.Column="5"
                    Margin="12.333,74,10.333,0" VerticalAlignment="Top" RenderTransformOrigin="-0.351,-0.051"
                    FontSize="8"
@@ -115,9 +120,9 @@
             <Label x:Name="mergingLabel" Content="Merging" Grid.Column="2"
                    Margin="9.667,258,12.667,0" VerticalAlignment="Top" Height="26" />
             <Button x:Name="clearCache" Content="Clear Cache" Grid.Column="2" Margin="9.667,148,12.667,0"
-                    VerticalAlignment="Top" Click="clearCache_Click" Height="23" />
+                    VerticalAlignment="Top" Click="ClearCacheClick" Height="23" />
             <Button x:Name="openLogFile" Content="Open Log File" Grid.Column="2" Margin="9.667,192,12.667,0"
-                    VerticalAlignment="Top" Height="23" Click="openLogFile_Click" />
+                    VerticalAlignment="Top" Height="23" Click="OpenLogFileClick" />
             <Expander Header="Options" x:Name="options" Grid.Column="2" Margin="9.667, 225, 12.667,35">
                 <Border BorderBrush="Black" BorderThickness="1" Margin="0, 10, 0 0">
                     <StackPanel Background="White">
@@ -163,6 +168,7 @@
                            HorizontalAlignment="Left" />
                 </StackPanel>
             </Expander>
+            <Button x:Name="testThrowExceptionButton" Content="Throw Exception" Grid.Column="2" HorizontalAlignment="Left" Margin="10,319,0,0" VerticalAlignment="Top" Width="171" Height="26" Click="testThrowExceptionButton_Click"/>
         </Grid>
     </Viewbox>
 </Window>

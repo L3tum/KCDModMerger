@@ -5,7 +5,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using KCDModMerger.Logging;
+using Newtonsoft.Json;
 
 #endregion
 
@@ -14,115 +15,48 @@ namespace KCDModMerger.Mods
     /// <summary>
     /// ModFile class
     /// </summary>
+    [LogInterceptor]
     public class ModFile
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ModFile"/> class.
-        /// </summary>
-        /// <param name="fileName">Name of the file.</param>
-        /// <param name="modName">Name of the mod.</param>
-        /// <param name="filePath">The file path.</param>
-        /// <param name="pakFile">The pak file.</param>
-        public ModFile(string fileName, string modName, string filePath, string pakFile)
+        public ModFile(string modName, string fileName, string pakFileName, string pakFilePath, bool isVanilla,
+            bool isLocalization, bool isExtracted = false)
         {
-            FileName = fileName;
             ModName = modName;
-            FilePath = filePath;
-            PakFile = pakFile;
+            FileName = fileName;
+            PakFileName = pakFileName;
+            PakFilePath = pakFilePath;
+            IsVanilla = isVanilla;
+            IsLocalization = isLocalization;
+            IsExtracted = isExtracted;
         }
 
-        /// <summary>
-        /// Gets or sets the name of the file.
-        /// </summary>
-        /// <value>
-        /// The name of the file.
-        /// </value>
-        public string FileName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the name of the mod.
-        /// </summary>
-        /// <value>
-        /// The name of the mod.
-        /// </value>
-        public string ModName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the file path.
-        /// </summary>
-        /// <value>
-        /// The file path.
-        /// </value>
-        public string FilePath { get; set; }
-
-        /// <summary>
-        /// Gets or sets the pak file.
-        /// </summary>
-        /// <value>
-        /// The pak file.
-        /// </value>
-        public string PakFile { get; set; }
+        internal string ModName { get; }
+        internal string FileName { get; }
+        internal string PakFileName { get; }
+        internal string PakFilePath { get; }
+        internal bool IsVanilla { get; }
+        internal bool IsLocalization { get; }
+        internal bool IsExtracted { get; }
 
         /// <summary>
         /// Deletes this instance.
         /// </summary>
         public void Delete()
         {
-            Task.Run(() =>
-            {
-                var sb = new StringBuilder();
-                sb.AppendLine(Logger.BuildLogWithDate("Deleting " + FileName + " in " + PakFile.Split('\\').Last() +
-                                                      "(" +
-                                                      ModName +
-                                                      ")"));
-                if (File.Exists(PakFile))
-                {
-                    using (FileStream fs = File.Open(PakFile, FileMode.Open))
-                    {
-                        using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
-                        {
-                            var entry = zip.Entries.FirstOrDefault(archiveEntry => archiveEntry.FullName == FileName);
+            var file = PakFilePath + "\\" + PakFileName;
 
-                            if (entry != null)
-                            {
-                                entry.Delete();
-                                sb.AppendLine(Logger.BuildLogWithDate(
-                                    "Deleted " + FileName + " in " + PakFile.Split('\\').Last() + "(" + ModName +
-                                    ")!"));
-                            }
-                            else
-                            {
-                                sb.AppendLine(Logger.BuildLogWithDate(
-                                    "Could not find " + FileName + " in " + PakFile.Split('\\').Last() + "(" + ModName +
-                                    ")!"));
-                            }
-                        }
+            if (File.Exists(file))
+            {
+                using (FileStream fs = File.Open(file, FileMode.Open))
+                {
+                    using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
+                    {
+                        var entry = zip.Entries.FirstOrDefault(archiveEntry => archiveEntry.FullName == FileName);
+
+                        entry?.Delete();
                     }
                 }
-                else
-                {
-                    sb.AppendLine(
-                        Logger.BuildLogWithDate(PakFile.Split('\\').Last() + "(" + ModName + ") does not exist!"));
-                }
-
-                return sb;
-            }).ContinueWith(t => { Logger.Log(t.Result); });
-        }
-
-        /// <summary>
-        /// Returns a hash code for this instance.
-        /// </summary>
-        /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-        /// </returns>
-        public override int GetHashCode()
-        {
-            var hashCode = 1811777985;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(FileName);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ModName);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(FilePath);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(PakFile);
-            return hashCode;
+            }
         }
 
         /// <summary>
@@ -137,11 +71,33 @@ namespace KCDModMerger.Mods
             if (obj.GetType() == GetType())
             {
                 var converted = ((ModFile) obj);
-                return converted.FileName == FileName && converted.ModName == ModName &&
-                       converted.FilePath == FilePath && PakFile == converted.PakFile;
+                return converted.FileName == FileName && 
+                       converted.ModName == ModName &&
+                       converted.PakFileName == PakFileName && 
+                       converted.IsVanilla == IsVanilla && 
+                       converted.IsLocalization == IsLocalization && 
+                       PakFilePath == converted.PakFilePath;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
+        public override int GetHashCode()
+        {
+            var hashCode = -1445040340;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ModName);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(FileName);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(PakFileName);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(PakFilePath);
+            hashCode = hashCode * -1521134295 + IsVanilla.GetHashCode();
+            hashCode = hashCode * -1521134295 + IsLocalization.GetHashCode();
+            return hashCode;
         }
 
         /// <summary>
@@ -152,9 +108,9 @@ namespace KCDModMerger.Mods
         /// </returns>
         public override string ToString()
         {
-            return "{\"fileName\": \"" + FileName + "\", \"modName\": \"" + ModName + "\", \"filePath\": \"" +
-                   FilePath + "\", \"pakFile\": \"" +
-                   PakFile + "\"}";
+            return JsonConvert.SerializeObject(this);
         }
+
+
     }
 }

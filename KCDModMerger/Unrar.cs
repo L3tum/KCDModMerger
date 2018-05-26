@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Collections;
+using KCDModMerger.Logging;
 
 
 /*  Author:  Michael A. McCloskey
@@ -46,14 +47,15 @@ namespace Schematrix
 	/// </summary>
 	public delegate void PasswordRequiredHandler(object sender, PasswordRequiredEventArgs e);
 
-	#endregion
-	
-	/// <summary>
-	/// Wrapper class for unrar DLL supplied by RARSoft.  
-	/// Calls unrar DLL via platform invocation services (pinvoke).
-	/// DLL is available at http://www.rarlab.com/rar/UnRARDLL.exe
-	/// </summary>
-	public class Unrar : IDisposable
+    #endregion
+
+    /// <summary>
+    /// Wrapper class for unrar DLL supplied by RARSoft.  
+    /// Calls unrar DLL via platform invocation services (pinvoke).
+    /// DLL is available at http://www.rarlab.com/rar/UnRARDLL.exe
+    /// </summary>
+    [LogInterceptor]
+    public class Unrar : IDisposable
 	{
 		#region Unrar DLL enumerations
 

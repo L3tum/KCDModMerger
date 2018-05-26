@@ -1,6 +1,7 @@
 ﻿#region usings
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -28,7 +29,7 @@ namespace KCDModMerger
         /// </summary>
         /// <param name="message"></param>
         /// <param name="addExclamation"></param>
-        public static void Log(string message, bool addExclamation = false)
+        internal static void Log(string message, bool addExclamation = false)
         {
             message = BuildLogWithDate(message, addExclamation);
             lock (sb)
@@ -46,7 +47,7 @@ namespace KCDModMerger
         /// Writes a StringBuilder to the log file
         /// </summary>
         /// <param name="stringBuilder"></param>
-        public static void Log(StringBuilder stringBuilder)
+        internal static void Log(StringBuilder stringBuilder)
         {
             if (stringBuilder.Length > 0)
             {
@@ -68,7 +69,7 @@ namespace KCDModMerger
         /// <param name="message"></param>
         /// <param name="addExclamation"></param>
         /// <returns></returns>
-        public static string BuildLog(string message, bool addExclamation = false)
+        internal static string BuildLog(string message, bool addExclamation = false)
         {
             message = CheckForExclamation(message, addExclamation);
             message = CheckForThread(message);
@@ -82,13 +83,22 @@ namespace KCDModMerger
         /// <param name="message"></param>
         /// <param name="addExclamation"></param>
         /// <returns></returns>
-        public static string BuildLogWithDate(string message, bool addExclamation = false)
+        internal static string BuildLogWithDate(string message, bool addExclamation = false)
         {
             message = BuildLog(message, addExclamation);
 
             message = "[" + DateTime.Now + "] " + message;
 
             return message;
+        }
+
+        /// <summary>
+        /// Opens the log file.
+        /// </summary>
+        internal static void OpenLogFile()
+        {
+            LogToFile(null);
+            Process.Start(@"" + LOG_FILE);
         }
 
         private static string CheckForExclamation(string message, bool addExclamation)
@@ -142,7 +152,7 @@ namespace KCDModMerger
 
         private static void CreateExceptionString(Exception e, string indent = "")
         {
-            if (indent != "") sb.AppendFormat("{0}Inner ", indent);
+            if (!string.IsNullOrEmpty(indent)) sb.AppendFormat("{0}Inner ", indent);
 
             sb.AppendFormat("Critical Exception Encountered:{0}Type: {1}", Environment.NewLine + indent,
                 e.GetType().FullName);

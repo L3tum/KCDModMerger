@@ -33,6 +33,85 @@
             <param name="addExclamation"></param>
             <returns></returns>
         </member>
+        <member name="M:KCDModMerger.Logger.OpenLogFile">
+            <summary>
+            Opens the log file.
+            </summary>
+        </member>
+        <member name="T:KCDModMerger.Logging.LogEntry">
+            <summary>
+            Log Entry
+            </summary>
+        </member>
+        <member name="M:KCDModMerger.Logging.LogEntry.#ctor(System.String,System.Diagnostics.StackTrace,System.DateTime,System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:KCDModMerger.Logging.LogEntry"/> class.
+            </summary>
+            <param name="methodName">Name of the method.</param>
+            <param name="stack">The stack.</param>
+            <param name="callTime">The call time.</param>
+            <param name="parameters">The parameters.</param>
+        </member>
+        <member name="M:KCDModMerger.Logging.LogEntry.#ctor(System.String,System.Diagnostics.StackTrace,System.DateTime,System.TimeSpan)">
+            <summary>
+            Initializes a new instance of the <see cref="T:KCDModMerger.Logging.LogEntry"/> class.
+            </summary>
+            <param name="methodName">Name of the method.</param>
+            <param name="stack">The stack.</param>
+            <param name="callTime">The call time.</param>
+            <param name="elapsed">The elapsed.</param>
+        </member>
+        <member name="M:KCDModMerger.Logging.LogEntry.#ctor(System.String,System.DateTime,System.TimeSpan,System.Object[],System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:KCDModMerger.Logging.LogEntry"/> class.
+            </summary>
+            <param name="methodName">Name of the method.</param>
+            <param name="callTime">The call time.</param>
+            <param name="elapsed">The elapsed time.</param>
+            <param name="parameters">The parameters.</param>
+            <param name="e">The Exception.</param>
+        </member>
+        <member name="M:KCDModMerger.Logging.LogEntry.#ctor(System.String,System.Boolean,System.Diagnostics.StackTrace)">
+            <summary>
+            Initializes a new instance of the <see cref="T:KCDModMerger.Logging.LogEntry"/> class.
+            </summary>
+            <param name="message">The message.</param>
+            <param name="addExclamation">if set to <c>true</c> [add exclamation].</param>
+            <param name="stack">The stack.</param>
+        </member>
+        <member name="M:KCDModMerger.Logging.Logger.OpenLogFile">
+            <summary>
+            Opens the log file.
+            </summary>
+        </member>
+        <member name="M:KCDModMerger.Logging.Logger.Log(System.String,System.Diagnostics.StackTrace,System.DateTime,System.TimeSpan)">
+            <summary>
+            Logs the specified method name.
+            </summary>
+            <param name="methodName">Name of the method.</param>
+            <param name="stack">The stack.</param>
+            <param name="callTime">The call time.</param>
+            <param name="elapsed">The elapsed.</param>
+        </member>
+        <member name="M:KCDModMerger.Logging.Logger.Log(System.String,System.DateTime,System.TimeSpan,System.Object[],System.Exception)">
+            <summary>
+            Logs the specified method exception.
+            </summary>
+            <param name="methodName">Name of the method.</param>
+            <param name="callTime">The call time.</param>
+            <param name="elapsed">The elapsed time.</param>
+            <param name="parameters">The parameters.</param>
+            <param name="e">The exception.</param>
+        </member>
+        <member name="M:KCDModMerger.Logging.Logger.Log(System.String,System.Diagnostics.StackTrace,System.DateTime,System.Object[])">
+            <summary>
+            Logs the specified method name.
+            </summary>
+            <param name="methodName">Name of the method.</param>
+            <param name="stack">The stack.</param>
+            <param name="callTime">The call time.</param>
+            <param name="parameters">The parameters.</param>
+        </member>
         <member name="T:KCDModMerger.Mods.ModFile">
             <summary>
             ModFile class
@@ -843,7 +922,7 @@
               resource lookups using this strongly typed resource class.
             </summary>
         </member>
-        <member name="M:KCDModMerger.UIUtilities.InvokeIfRequired(System.Windows.Controls.Control,System.Action,System.Windows.Threading.DispatcherPriority)">
+        <member name="M:KCDModMerger.Utilities.InvokeIfRequired(System.Windows.Controls.Control,System.Action,System.Windows.Threading.DispatcherPriority)">
             <summary>
             Invokes if required.
             </summary>
@@ -851,21 +930,21 @@
             <param name="action">The action.</param>
             <param name="priority">The priority.</param>
         </member>
-        <member name="M:KCDModMerger.UIUtilities.DisableButton(System.Windows.Controls.Button,System.String)">
+        <member name="M:KCDModMerger.Utilities.DisableButton(System.Windows.Controls.Button,System.String)">
             <summary>
             Disables the button.
             </summary>
             <param name="button">The button.</param>
             <param name="tooltip">The tooltip.</param>
         </member>
-        <member name="M:KCDModMerger.UIUtilities.EnableButton(System.Windows.Controls.Button,System.String)">
+        <member name="M:KCDModMerger.Utilities.EnableButton(System.Windows.Controls.Button,System.String)">
             <summary>
             Enables the button.
             </summary>
             <param name="button">The button.</param>
             <param name="tooltip">The tooltip.</param>
         </member>
-        <member name="M:KCDModMerger.UIUtilities.IsDefault``1(``0)">
+        <member name="M:KCDModMerger.Utilities.IsDefault``1(``0)">
             <summary>
             Determines whether this instance is default.
             </summary>
@@ -875,12 +954,47 @@
               <c>true</c> if the specified value is default; otherwise, <c>false</c>.
             </returns>
         </member>
+        <member name="M:KCDModMerger.Utilities.PrintInfo">
+            <summary>
+            Prints the information.
+            </summary>
+        </member>
+        <member name="M:KCDModMerger.Utilities.GetProcessorInfo">
+            <summary>
+            Gets the processor information.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:KCDModMerger.Utilities.GetGPUInfo">
+            <summary>
+            Gets the gpu information.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:KCDModMerger.Utilities.ConvertToHighest(System.Int64)">
+            <summary>
+            Converts to highest.
+            </summary>
+            <param name="bytes">The bytes.</param>
+            <returns></returns>
+        </member>
+        <member name="M:KCDModMerger.Utilities.GetDotNetVerson">
+            <summary>
+            Gets the dot net verson.
+            </summary>
+            <returns></returns>
+        </member>
         <member name="T:KCDModMerger.App">
             <summary>
                 Interaction logic for App.xaml
             </summary>
             <summary>
             App
+            </summary>
+        </member>
+        <member name="F:KCDModMerger.App.MainThreadId">
+            <summary>
+            The main thread identifier
             </summary>
         </member>
         <member name="M:KCDModMerger.App.#ctor">
@@ -987,56 +1101,56 @@
             <param name="sender">The source of the event.</param>
             <param name="e">The <see cref="T:System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         </member>
-        <member name="M:KCDModMerger.MainWindow.modList_SelectionChanged(System.Object,System.Windows.Controls.SelectionChangedEventArgs)">
+        <member name="M:KCDModMerger.MainWindow.ModListSelectionChanged(System.Object,System.Windows.Controls.SelectionChangedEventArgs)">
             <summary>
             Handles the SelectionChanged event of the modList control.
             </summary>
             <param name="sender">The source of the event.</param>
             <param name="e">The <see cref="T:System.Windows.Controls.SelectionChangedEventArgs"/> instance containing the event data.</param>
         </member>
-        <member name="M:KCDModMerger.MainWindow.humanReadableInfoChanged(System.Object,System.ComponentModel.PropertyChangedEventArgs)">
+        <member name="M:KCDModMerger.MainWindow.HumanReadableInfoChanged(System.Object,System.ComponentModel.PropertyChangedEventArgs)">
             <summary>
             Humans readable information changed.
             </summary>
             <param name="sender">The sender.</param>
             <param name="e">The <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance containing the event data.</param>
         </member>
-        <member name="M:KCDModMerger.MainWindow.conflictFilesList_SelectionChanged(System.Object,System.Windows.Controls.SelectionChangedEventArgs)">
+        <member name="M:KCDModMerger.MainWindow.ConflictFilesListSelectionChanged(System.Object,System.Windows.Controls.SelectionChangedEventArgs)">
             <summary>
             Handles the SelectionChanged event of the conflictFilesList control.
             </summary>
             <param name="sender">The source of the event.</param>
             <param name="e">The <see cref="T:System.Windows.Controls.SelectionChangedEventArgs"/> instance containing the event data.</param>
         </member>
-        <member name="M:KCDModMerger.MainWindow.launchKdiff_Click(System.Object,System.Windows.RoutedEventArgs)">
+        <member name="M:KCDModMerger.MainWindow.LaunchKdiffClick(System.Object,System.Windows.RoutedEventArgs)">
             <summary>
             Handles the Click event of the launchKdiff control.
             </summary>
             <param name="sender">The source of the event.</param>
             <param name="e">The <see cref="T:System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         </member>
-        <member name="M:KCDModMerger.MainWindow.conflictingModsList_SelectionChanged(System.Object,System.Windows.Controls.SelectionChangedEventArgs)">
+        <member name="M:KCDModMerger.MainWindow.ConflictingModsListSelectionChanged(System.Object,System.Windows.Controls.SelectionChangedEventArgs)">
             <summary>
             Handles the SelectionChanged event of the conflictingModsList control.
             </summary>
             <param name="sender">The source of the event.</param>
             <param name="e">The <see cref="T:System.Windows.Controls.SelectionChangedEventArgs"/> instance containing the event data.</param>
         </member>
-        <member name="M:KCDModMerger.MainWindow.mergeButton_Click(System.Object,System.Windows.RoutedEventArgs)">
+        <member name="M:KCDModMerger.MainWindow.MergeButtonClick(System.Object,System.Windows.RoutedEventArgs)">
             <summary>
             Handles the Click event of the mergeButton control.
             </summary>
             <param name="sender">The source of the event.</param>
             <param name="e">The <see cref="T:System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         </member>
-        <member name="M:KCDModMerger.MainWindow.clearCache_Click(System.Object,System.Windows.RoutedEventArgs)">
+        <member name="M:KCDModMerger.MainWindow.ClearCacheClick(System.Object,System.Windows.RoutedEventArgs)">
             <summary>
             Handles the Click event of the clearCache control.
             </summary>
             <param name="sender">The source of the event.</param>
             <param name="e">The <see cref="T:System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         </member>
-        <member name="M:KCDModMerger.MainWindow.openLogFile_Click(System.Object,System.Windows.RoutedEventArgs)">
+        <member name="M:KCDModMerger.MainWindow.OpenLogFileClick(System.Object,System.Windows.RoutedEventArgs)">
             <summary>
             Handles the Click event of the openLogFile control.
             </summary>
@@ -1068,6 +1182,12 @@
             <summary>
             InitializeComponent
             </summary>
+        </member>
+        <member name="T:KCDModMerger.ModManager">
+            <summary>
+            Manages the Mod Interactions
+            </summary>
+            <seealso cref="T:System.ComponentModel.INotifyPropertyChanged" />
         </member>
         <member name="M:KCDModMerger.ModManager.#ctor">
             <summary>
@@ -1199,6 +1319,12 @@
             Deletes the folder.
             </summary>
             <param name="folder">The folder.</param>
+        </member>
+        <member name="M:KCDModMerger.ModManager.OnPropertyChanged(System.String)">
+            <summary>
+            Called when [property changed].
+            </summary>
+            <param name="propertyName">Name of the property.</param>
         </member>
         <member name="T:Schematrix.DataAvailableHandler">
             <summary>

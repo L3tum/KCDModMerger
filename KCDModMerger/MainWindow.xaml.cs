@@ -14,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using KCDModMerger.Logging;
 using KCDModMerger.Mods;
 using KCDModMerger.Properties;
 using Button = System.Windows.Controls.Button;
@@ -38,7 +39,6 @@ namespace KCDModMerger
         internal static bool isMerging;
         internal static bool isInformationVisible;
         internal static Dispatcher dispatcherGlobal;
-        private readonly Dictionary<string, List<ModFile>> conflicts = new Dictionary<string, List<ModFile>>();
         private readonly BackgroundWorker worker = new BackgroundWorker();
         private PerformanceCounter availableRamRounter;
         private PerformanceCounter cpuCounter;
@@ -52,30 +52,31 @@ namespace KCDModMerger
         /// </summary>
         public MainWindow()
         {
-            Logger.Log("Initializing Main Window");
+            Logging.Logger.Log("Initializing Main Window");
 
             // Self-documented
             InitializePerformanceWatchers();
 
-            Logger.Log("Initializing Components");
+            Logging.Logger.Log("Initializing Components");
 
             InitializeComponent();
 
             CurrentActionLabel = currentActionLabel;
             dispatcherGlobal = Dispatcher;
 
+#if DEBUG
+            testThrowExceptionButton.Visibility = Visibility.Visible;
+#else
+            testThrowExceptionButton.Visibility = Visibility.Hidden;
+#endif
+
             Logger.Log("Initialized Components!");
 
             // Self-documented
             InitializeMergeWorker();
 
-            Logger.Log("Starting ModManager");
             ModMana = new ModManager();
-            Logger.Log("Started ModManager!");
-
-            Logger.Log("Assigning ModManager Listeners");
             ModMana.PropertyChanged += ModManaChangeListener;
-            Logger.Log("Assigned ModManager Listeners!");
 
             // Self-documented
             InitializeUI();
@@ -116,9 +117,6 @@ namespace KCDModMerger
 
             ToolTipService.ShowOnDisabledProperty.OverrideMetadata(typeof(Button), new FrameworkPropertyMetadata(true));
 
-            conflictFilesList.DataContext = this;
-            conflictFilesList.ItemsSource = ModMana.Conflicts;
-
             var source = FindResource("ModNamesVS") as CollectionViewSource;
             source.Source = ModMana.ModNames;
 
@@ -132,18 +130,18 @@ namespace KCDModMerger
             mergeProgressBar.Visibility = Visibility.Hidden;
             mergingLabel.Visibility = Visibility.Hidden;
 
-            conflictingModsList.PreviewMouseMove += modsList_PreviewMouseMove;
+            conflictingModsList.PreviewMouseMove += ModsListPreviewMouseMove;
 
             var style = new Style(typeof(ListBoxItem));
             style.Setters.Add(new Setter(AllowDropProperty, true));
             style.Setters.Add(
                 new EventSetter(
                     PreviewMouseLeftButtonDownEvent,
-                    new MouseButtonEventHandler(modsList_PreviewMouseLeftButtonDown)));
+                    new MouseButtonEventHandler(ModsListPreviewMouseLeftButtonDown)));
             style.Setters.Add(
                 new EventSetter(
                     DropEvent,
-                    new DragEventHandler(modsList_Drop)));
+                    new DragEventHandler(ModsListDrop)));
             conflictingModsList.ItemContainerStyle = style;
             Logger.Log("Initialized UI!");
         }
@@ -173,7 +171,7 @@ namespace KCDModMerger
             }
             catch (InvalidOperationException e)
             {
-                Logger.Log("Performance Watchers: " + e.Message);
+                Logging.Logger.LogWarn("Performance Watchers: " + e.Message, WarnSeverity.Mid);
             }
             finally
             {
@@ -183,6 +181,7 @@ namespace KCDModMerger
                 diskCounter = null;
                 threadsCounter = null;
             }
+
             Logger.Log("Initialized Performance Watcher!");
         }
 
@@ -279,7 +278,7 @@ namespace KCDModMerger
                         ? ModMana.ExtractVanillaFile(fileToMerge)
                         : modExtractedFiles[fileToMerge.FileName];
 
-                    if (baseFile == "" || baseFile == "")
+                    if (string.IsNullOrEmpty(baseFile))
                     {
                         Logger.Log("No base file found for " + fileToMerge.FileName, true);
                     }
@@ -323,12 +322,13 @@ namespace KCDModMerger
         /// <param name="state">The state.</param>
         private void UpdateUsages(object state)
         {
-            if (isInformationVisible && cpuCounter != null && ramCounter != null && availableRamRounter != null && diskCounter != null && threadsCounter != null)
+            if (isInformationVisible && cpuCounter != null && ramCounter != null && availableRamRounter != null &&
+                diskCounter != null && threadsCounter != null)
             {
                 var cpu = Math.Round(cpuCounter.NextValue()) + "%";
-                var ram = App.ConvertToHighest((long) ramCounter.NextValue()) + " (" +
-                          App.ConvertToHighest((long) availableRamRounter.NextValue()) + " Available)";
-                var io = App.ConvertToHighest((long) diskCounter.NextValue()) + "/sec";
+                var ram = Utilities.ConvertToHighest((long) ramCounter.NextValue()) + " (" +
+                          Utilities.ConvertToHighest((long) availableRamRounter.NextValue()) + " Available)";
+                var io = Utilities.ConvertToHighest((long) diskCounter.NextValue()) + "/sec";
                 var threads = threadsCounter.NextValue() + " Threads (" + Process.GetCurrentProcess().Threads.Count +
                               " Including CLR)";
 
@@ -352,7 +352,7 @@ namespace KCDModMerger
             // We do not want any updates while merging. The stuff is updated afterwards anyways.
             if (!isMerging)
             {
-                if (args.PropertyName == nameof(ModMana.ModFiles) || args.PropertyName == nameof(ModMana.Conflicts))
+                if (args.PropertyName == nameof(ModMana.Mods) || args.PropertyName == nameof(ModMana.Conflicts))
                 {
                     UpdateConflicts();
                 }
@@ -364,31 +364,16 @@ namespace KCDModMerger
         /// </summary>
         private void UpdateConflicts()
         {
-            Logger.Log("Updating Conflicts");
+            conflictFilesList.Items.Clear();
 
-            foreach (var selectedFile in ModMana.Conflicts)
+            foreach (var selectedFile in ModMana.Conflicts.Keys)
             {
-                var modF = ModMana.ModFiles.Where(file => file.FileName.Equals(selectedFile));
-
-                if (!conflicts.ContainsKey(selectedFile))
-                {
-                    conflicts.Add(selectedFile, new List<ModFile>(modF));
-                    Logger.Log("Added " + selectedFile + " with " + conflicts[selectedFile].Count + " Conflicts!");
-                }
-                else
-                {
-                    foreach (var file in modF)
-                        if (!conflicts[selectedFile].Contains(file))
-                        {
-                            Logger.Log("Adding " + file + " to " + selectedFile);
-                            conflicts[selectedFile].Add(file);
-                        }
-                }
+                conflictFilesList.Items.Add(selectedFile);
             }
 
-            Logger.Log("Updated Conflicts to " + conflicts.Count + " different files!");
+            Logging.Logger.Log("Updated Conflicts to " + conflictFilesList.Items.Count + " different files!");
 
-            if (conflicts.Count > 0)
+            if (conflictFilesList.Items.Count > 0)
             {
                 mergeButton.EnableButton();
             }
@@ -420,7 +405,7 @@ namespace KCDModMerger
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="SelectionChangedEventArgs"/> instance containing the event data.</param>
-        private void modList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ModListSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (modList.SelectedIndex != -1)
             {
@@ -428,7 +413,7 @@ namespace KCDModMerger
                 if (e.RemovedItems.Count > 0)
                 {
                     var lastIndex = ModMana.ModNames.IndexOf((string) e.RemovedItems[0]);
-                    ModMana.Mods[lastIndex].manifest.PropertyChanged -= humanReadableInfoChanged;
+                    ModMana.Mods[lastIndex].manifest.PropertyChanged -= HumanReadableInfoChanged;
                 }
 
                 var selectedMod =
@@ -436,7 +421,7 @@ namespace KCDModMerger
 
                 if (selectedMod != null)
                 {
-                    selectedMod.manifest.PropertyChanged += humanReadableInfoChanged;
+                    selectedMod.manifest.PropertyChanged += HumanReadableInfoChanged;
 
                     modInfo.Text = selectedMod.manifest.HumanReadableInfo;
                 }
@@ -448,7 +433,7 @@ namespace KCDModMerger
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
-        private void humanReadableInfoChanged(object sender, PropertyChangedEventArgs e)
+        private void HumanReadableInfoChanged(object sender, PropertyChangedEventArgs e)
         {
             modInfo.Text = ModMana.Mods[modList.SelectedIndex].manifest.HumanReadableInfo;
         }
@@ -458,13 +443,21 @@ namespace KCDModMerger
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="SelectionChangedEventArgs"/> instance containing the event data.</param>
-        private void conflictFilesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ConflictFilesListSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            conflictingModsList.Items.Clear();
+
             if (conflictFilesList.SelectedIndex != -1)
             {
                 var selectedFile = (string) conflictFilesList.SelectedItem;
 
-                conflictingModsList.ItemsSource = conflicts[selectedFile].Select(file => file.ModName);
+                var conflicts = ModMana.Conflicts[selectedFile];
+
+                foreach (string conflict in conflicts)
+                {
+                    conflictingModsList.Items.Add(conflict);
+                }
+
                 conflictingModsList.Visibility = Visibility.Visible;
                 priorityLabel.Visibility = Visibility.Visible;
                 lowerPriorityLabel.Visibility = Visibility.Visible;
@@ -484,21 +477,24 @@ namespace KCDModMerger
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
-        private void launchKdiff_Click(object sender, RoutedEventArgs e)
+        private void LaunchKdiffClick(object sender, RoutedEventArgs e)
         {
             Logger.Log("Launching KDiff on " + conflictFilesList.SelectedItem + "(" + conflictingModsList.SelectedItem +
                        ")");
-            var modFile = ModMana.ModFiles.FirstOrDefault(modfile =>
+            var modFile = ModMana.ConflictingModFiles.FirstOrDefault(modfile =>
                 modfile.ModName == (string) conflictingModsList.SelectedItem &&
                 modfile.FileName == (string) conflictFilesList.SelectedItem);
-            var modExtractedFile = ModMana.ExtractFile(modFile);
+            var modExtractedFile = ModManager.directoryManager.ExtractFile(modFile);
             var vanillaExtractedFile = ModMana.ExtractVanillaFile(modFile);
 
-            if (modExtractedFile == string.Empty || vanillaExtractedFile == string.Empty)
+            if (string.IsNullOrEmpty(modExtractedFile) || string.IsNullOrEmpty(vanillaExtractedFile))
             {
                 Logger.Log("Unable to locate File " + modFile.FileName + " for " +
-                           (modExtractedFile == string.Empty && vanillaExtractedFile == string.Empty ? "both" :
-                               modExtractedFile == string.Empty ? modFile.ModName : "Vanilla"), true);
+                           (string.IsNullOrEmpty(modExtractedFile) && string.IsNullOrEmpty(vanillaExtractedFile)
+                               ? "both"
+                               : string.IsNullOrEmpty(modExtractedFile)
+                                   ? modFile.ModName
+                                   : "Vanilla"), true);
                 modInfo.Text = "Unable to locate File!";
                 return;
             }
@@ -511,7 +507,7 @@ namespace KCDModMerger
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="SelectionChangedEventArgs"/> instance containing the event data.</param>
-        private void conflictingModsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ConflictingModsListSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (conflictingModsList.SelectedIndex != -1)
                 launchKdiff.EnableButton();
@@ -525,13 +521,12 @@ namespace KCDModMerger
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
-        private void mergeButton_Click(object sender, RoutedEventArgs e)
+        private void MergeButtonClick(object sender, RoutedEventArgs e)
         {
             Logger.Log("Starting Merge Worker!");
 
             worker.RunWorkerAsync();
             isMerging = true;
-            mergeProgressBar.Visibility = Visibility.Visible;
             mergingLabel.Visibility = Visibility.Visible;
             mergeButton.Visibility = Visibility.Hidden;
             options.IsExpanded = false;
@@ -544,7 +539,7 @@ namespace KCDModMerger
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
-        private void clearCache_Click(object sender, RoutedEventArgs e)
+        private void ClearCacheClick(object sender, RoutedEventArgs e)
         {
             Settings.Default.Reset();
 
@@ -564,11 +559,9 @@ namespace KCDModMerger
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
-        private void openLogFile_Click(object sender, RoutedEventArgs e)
+        private void OpenLogFileClick(object sender, RoutedEventArgs e)
         {
-            Logger.LogToFile(null);
-
-            Process.Start(@"" + Logger.LOG_FILE);
+            Logger.OpenLogFile();
         }
 
         /// <summary>
@@ -606,6 +599,11 @@ namespace KCDModMerger
             Settings.Default.KCDPath = textBox.Text;
         }
 
+        private void testThrowExceptionButton_Click(object sender, RoutedEventArgs e)
+        {
+            throw new Exception("This is a test");
+        }
+
         #region DragNDrop
 
         private Point _dragStartPoint;
@@ -616,13 +614,12 @@ namespace KCDModMerger
             var parentObject = VisualTreeHelper.GetParent(child);
             if (parentObject == null)
                 return null;
-            var parent = parentObject as T;
-            if (parent != null)
+            if (parentObject is T parent)
                 return parent;
             return FindVisualParent<T>(parentObject);
         }
 
-        private void modsList_PreviewMouseMove(object sender, MouseEventArgs e)
+        private void ModsListPreviewMouseMove(object sender, MouseEventArgs e)
         {
             var point = e.GetPosition(null);
             var diff = _dragStartPoint - point;
@@ -636,12 +633,12 @@ namespace KCDModMerger
             }
         }
 
-        private void modsList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void ModsListPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             _dragStartPoint = e.GetPosition(null);
         }
 
-        private void modsList_Drop(object sender, DragEventArgs e)
+        private void ModsListDrop(object sender, DragEventArgs e)
         {
             if (sender is ListBoxItem)
             {

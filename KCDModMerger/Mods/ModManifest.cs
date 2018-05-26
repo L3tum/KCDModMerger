@@ -11,12 +11,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using KCDModMerger.Annotations;
+using KCDModMerger.Logging;
 using Newtonsoft.Json;
 
 #endregion
 
 namespace KCDModMerger.Mods
 {
+    [LogInterceptor]
     internal class ModManifest : INotifyPropertyChanged
     {
         private readonly string file;

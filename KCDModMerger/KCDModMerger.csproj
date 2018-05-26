@@ -13,6 +13,9 @@
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -25,11 +28,8 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -81,6 +81,14 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Cauldron.Interception, Version=2.0.0.39, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Cauldron.Interception.Fody.2.1.0\lib\net461\Cauldron.Interception.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Costura, Version=1.6.2.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
+      <HintPath>..\packages\Costura.Fody.1.6.2\lib\dotnet\Costura.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -94,7 +102,6 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
@@ -108,13 +115,24 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="Logging\Log.cs" />
+    <Compile Include="Logging\LogEntry.cs" />
+    <Compile Include="Logging\Logger.cs" />
+    <Compile Include="Logging\LogInterceptor.cs" />
+    <Compile Include="Mods\DirectoryManager.cs" />
+    <Compile Include="Mods\LegacyModLoader.cs" />
     <Compile Include="Mods\ModFile.cs" />
+    <Compile Include="Mods\ModLoader.cs" />
     <Compile Include="Mods\ModManifest.cs" />
+    <Compile Include="Mods\ModMerger.cs" />
+    <Compile Include="Mods\VanillaFileManager.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="OSVersionInfo.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="UIUtilities.cs" />
+    <Compile Include="Utilities.cs" />
     <Compile Include="Unrar.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -154,243 +172,243 @@
       <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="Tools\KDiff3\bin\bin.Manifest">
+    <AdditionalFiles Include="Tools\KDiff3\bin\bin.Manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\doc\common\fdl-license">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\fdl-license">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\doc\common\gpl-license">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\gpl-license">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\doc\common\lgpl-license">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\lgpl-license">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\doc\common\xml.dcl">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\xml.dcl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\kdiff3.exe.manifest">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\kdiff3.exe.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\qt.conf">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\qt.conf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_cs.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_cs.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_de.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_de.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_de_old.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_de_old.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_el.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_el.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_es.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_es.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_et.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_et.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_fr.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_fr.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_ga.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_ga.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_gl.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_gl.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_nb.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_nb.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_nds.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_nds.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_nl.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_nl.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_pt.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_pt.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_pt_BR.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_pt_BR.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_ro.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_ro.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_sv.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_sv.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_tr.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_tr.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_uk.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_uk.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\diff_ext_zh_CN.po">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\diff_ext_zh_CN.po">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_ar.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_ar.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_bg.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_bg.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_br.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_br.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_bs.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_bs.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_ca%40valencia.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_ca%40valencia.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_ca.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_ca.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_cs.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_cs.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_cy.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_cy.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_da.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_da.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_de.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_de.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_el.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_el.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_en_GB.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_en_GB.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_es.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_es.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_et.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_et.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_fr.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_fr.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_ga.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_ga.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_gl.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_gl.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_hi.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_hi.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_hne.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_hne.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_hu.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_hu.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_it.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_it.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_ja.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_ja.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_ka.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_ka.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_lt.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_lt.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_ml.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_ml.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_nb.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_nb.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_nds.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_nds.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_nl.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_nl.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_pl.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_pl.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_pt.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_pt.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_pt_BR.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_pt_BR.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_ro.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_ro.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_ru.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_ru.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_rw.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_rw.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_sr%40Latn.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_sr%40Latn.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_sr.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_sr.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_sv.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_sv.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_ta.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_ta.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_tg.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_tg.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_tr.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_tr.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_uk.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_uk.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_zh_CN.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_zh_CN.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_zh_CN_old.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_zh_CN_old.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\kdiff3_zh_TW.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\kdiff3_zh_TW.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\qt_ar.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\qt_ar.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\qt_cs.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\qt_cs.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\qt_de.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\qt_de.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\qt_es.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\qt_es.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\qt_fr.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\qt_fr.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\qt_he.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\qt_he.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\qt_iw.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\qt_iw.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\qt_ru.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\qt_ru.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Tools\KDiff3\translations\qt_sk.qm">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\translations\qt_sk.qm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </AdditionalFiles>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -411,400 +429,399 @@
     <Resource Include="KingdomCome_101.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Tools\KDiff3\bin\cmp.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\diff.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\diff3.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\libgcc_s_seh-1.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\libiconv2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\libintl3.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\libstdc++-6.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\libwinpthread-1.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\plugins\accessible\qtaccessiblewidgets.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\plugins\codecs\qcncodecs4.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\plugins\codecs\qjpcodecs4.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\plugins\codecs\qkrcodecs4.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\plugins\codecs\qtwcodecs4.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\plugins\platforms\qwindows.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\plugins\printsupport\windowsprintersupport.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\Qt5Core.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\Qt5Gui.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\Qt5PrintSupport.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\Qt5Widgets.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\Unrar\32Bit\unrar.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\Unrar\64Bit\unrar.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\bin\README-Qt.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Resource Include="FodyWeavers.xml">
+      <SubType>Designer</SubType>
     </Resource>
-    <Resource Include="Tools\KDiff3\bin\README-Utilities.txt">
+    <AdditionalFiles Include="Tools\KDiff3\bin\cmp.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\bin\regex2.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\diff.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\sdiff.exe">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\diff3.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\bin\sed.exe">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\libgcc_s_seh-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\ChangeLog.txt">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\libiconv2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\DIFF-EXT-LICENSE.txt">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\libintl3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\diff_ext_for_kdiff3.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\libstdc++-6.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\diff_ext_for_kdiff3_64.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\libwinpthread-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\plugins\accessible\qtaccessiblewidgets.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\plugins\codecs\qcncodecs4.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\plugins\codecs\qjpcodecs4.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\plugins\codecs\qkrcodecs4.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\plugins\codecs\qtwcodecs4.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\plugins\platforms\qwindows.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\plugins\printsupport\windowsprintersupport.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\Qt5Core.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\Qt5Gui.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\Qt5PrintSupport.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\Qt5Widgets.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\Unrar\32Bit\unrar.dll" />
+    <AdditionalFiles Include="Tools\Unrar\64Bit\unrar.dll" />
+    <AdditionalFiles Include="Tools\KDiff3\bin\README-Qt.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\README-Utilities.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\regex2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\sdiff.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\bin\sed.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\ChangeLog.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\DIFF-EXT-LICENSE.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\diff_ext_for_kdiff3.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\diff_ext_for_kdiff3_64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
     <Content Include="Tools\KDiff3\Uninstall.exe" />
-    <Resource Include="Tools\KDiff3\COPYING.txt">
+    <AdditionalFiles Include="Tools\KDiff3\COPYING.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\1.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\10.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\10.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\2.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\3.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\3.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\4.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\4.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\5.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\5.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\6.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\6.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\7.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\7.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\8.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\8.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\9.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\9.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\common\artistic-license.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\artistic-license.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\common\block_title_bottom.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\block_title_bottom.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\block_title_mid.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\block_title_mid.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\block_title_top.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\block_title_top.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\bottom-left.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\bottom-left.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\bottom-middle.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\bottom-middle.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\bottom-right.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\bottom-right.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\common\bsd-license.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\bsd-license.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\common\doxygen.css">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\doxygen.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\common\favicon.ico">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\favicon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\common\fdl-license.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\fdl-license.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\common\fdl-notice.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\fdl-notice.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\common\footer.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\footer.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\common\gpl-license.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\gpl-license.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\common\header.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\header.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\common\kde-default.css">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\kde-default.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\common\kde_logo_bg.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\kde_logo_bg.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\common\lgpl-license.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\lgpl-license.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\common\mainfooter.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\mainfooter.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\common\mainheader.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\mainheader.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\common\qpl-license.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\qpl-license.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\common\tabs.css">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\tabs.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\common\top-kde.jpg">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\top-kde.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\top-left.jpg">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\top-left.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\top-left.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\top-left.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\top-middle.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\top-middle.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\top-right.jpg">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\top-right.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\top-right.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\top-right.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\common\top.jpg">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\top.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\common\x11-license.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\common\x11-license.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\compilation.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\compilation.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\credits.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\credits.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\dirbrowser.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\dirbrowser.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\dirmerge.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\dirmerge.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\dirmergebig.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\dirmergebig.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\dirmergeoptions.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\dirmergeoptions.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\dirmergevisible.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\dirmergevisible.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\documentation.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\documentation.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\dothemerge.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\dothemerge.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\faq.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\faq.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\features.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\features.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\find.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\find.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\index.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\index.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\installation.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\installation.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\interpretinginformation.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\interpretinginformation.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\introduction.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\introduction.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\iteminfo.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\iteminfo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\kpart.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\kpart.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\letter_by_letter.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\letter_by_letter.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\merge_current.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\merge_current.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\merging.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\merging.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\misc.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\misc.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\navigation.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\navigation.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\new.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\new.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\opendialog.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\opendialog.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\open_dialog.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\open_dialog.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\options.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\options.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\other.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\other.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\pasteinput.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\pasteinput.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\preprocessors.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\preprocessors.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\printing.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\printing.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\requirements.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\requirements.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\saving.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\saving.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\screenshots.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\screenshots.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\screenshot_diff.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\screenshot_diff.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\screenshot_merge.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\screenshot_merge.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\doc\selections.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\selections.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\doc\startingdirmerge.html">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\startingdirmerge.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\doc\triple_diff.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\triple_diff.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\doc\white_space.png">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\doc\white_space.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\kdiff3.exe">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\kdiff3.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\libgcc_s_seh-1.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\libgcc_s_seh-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\libiconv2.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\libiconv2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\libintl3.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\libintl3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\libstdc++-6.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\libstdc++-6.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\libwinpthread-1.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\libwinpthread-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\plugins\accessible\qtaccessiblewidgets.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\plugins\accessible\qtaccessiblewidgets.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\plugins\codecs\qcncodecs4.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\plugins\codecs\qcncodecs4.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\plugins\codecs\qjpcodecs4.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\plugins\codecs\qjpcodecs4.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\plugins\codecs\qkrcodecs4.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\plugins\codecs\qkrcodecs4.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\plugins\codecs\qtwcodecs4.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\plugins\codecs\qtwcodecs4.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\plugins\platforms\qwindows.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\plugins\platforms\qwindows.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\plugins\printsupport\windowsprintersupport.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\plugins\printsupport\windowsprintersupport.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\Qt5Core.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\Qt5Core.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\Qt5Gui.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\Qt5Gui.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\Qt5PrintSupport.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\Qt5PrintSupport.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tools\KDiff3\Qt5Widgets.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\Qt5Widgets.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="Tools\KDiff3\README-Qt.txt">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\README-Qt.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Tools\KDiff3\README_WIN.txt">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\README_WIN.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Tools\KDiff3\regex2.dll">
+    </AdditionalFiles>
+    <AdditionalFiles Include="Tools\KDiff3\regex2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </AdditionalFiles>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -812,4 +829,13 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
+  <Import Project="..\packages\Fody.2.5.0\build\Fody.targets" Condition="Exists('..\packages\Fody.2.5.0\build\Fody.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Fody.2.5.0\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.5.0\build\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets'))" />
+  </Target>
+  <Import Project="..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets')" />
 </Project>

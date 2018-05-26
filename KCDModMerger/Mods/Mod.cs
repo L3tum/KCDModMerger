@@ -8,12 +8,14 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using KCDModMerger.Logging;
 using Schematrix;
 
 #endregion
 
 namespace KCDModMerger.Mods
 {
+    [LogInterceptor]
     internal class Mod
     {
         private readonly string[] DISALLOWED_FILETYPES =
@@ -26,75 +28,41 @@ namespace KCDModMerger.Mods
         ///     Initializes a new instance of the <see cref="Mod" /> class.
         /// </summary>
         /// <param name="folderName">Name of the folder.</param>
-        /// <param name="logger">The logger.</param>
-        public Mod(string folderName, StringBuilder logger = null)
+        public Mod(string folderName)
         {
-            var flush = false;
-            StringBuilder logBuilder;
-
-            if (logger != null)
-            {
-                logBuilder = logger;
-            }
-            else
-            {
-                logBuilder = new StringBuilder();
-                flush = true;
-            }
-
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Initializing Mod " + folderName.Split('\\').Last()));
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Folder: " + folderName, true));
-
             FolderName = folderName;
 
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Initializing Manifest"));
-
-            manifest = new ModManifest(folderName + "\\mod.manifest", logBuilder);
+            manifest = new ModManifest(folderName + "\\mod.manifest");
             manifest.DisplayName = folderName.Split('\\').Last();
             manifest.ReadManifest();
-
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Initialized Manifest!"));
 
             Folders = GetFolders(folderName);
 
             // self-documented
-            ManagePaks(logBuilder);
-
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Initialized Mod " + folderName, true));
-
-            if (flush) Logger.Log(logBuilder);
+            ManagePaks();
         }
 
         /// <summary>
         ///     Finds the paks.
         /// </summary>
-        /// <param name="logBuilder">The log builder.</param>
-        private void FindPaks(StringBuilder logBuilder)
+        private void FindPaks()
         {
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Searching for Paks"));
-
             var folderFiles = new List<ModFile>();
 
             foreach (var folder in Folders)
             {
-                logBuilder.AppendLine(Logger.BuildLogWithDate("Searching for Paks in " + folder.Split('\\').Last()));
                 var paks = GetPaks(folder);
-
-                logBuilder.AppendLine(
-                    Logger.BuildLogWithDate("Found " + paks.Length + " Paks in " + folder.Split('\\').Last(), true));
 
                 foreach (var pak in paks)
                 {
                     var parts = pak.Split('\\');
-                    var filename = parts[parts.Length - 3] + "\\" + parts[parts.Length - 2] + "\\" +
-                                   parts[parts.Length - 1];
+                    var pakFileName = parts.Last();
+                    var pakFilePath = pak.Replace("\\" + pakFileName, "");
+                    var isLocalization = parts[parts.Length - 2].Equals("Localization");
 
-                    logBuilder.AppendLine(Logger.BuildLogWithDate("Found " + filename, true));
-                    folderFiles.Add(new ModFile(pak, manifest.DisplayName, folder, pak));
+                    folderFiles.Add(new ModFile(this.manifest.DisplayName, "", pakFileName, pakFilePath, false, isLocalization));
                 }
             }
-
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Found total of " + folderFiles.Count, true));
 
             Files = folderFiles.ToArray();
         }
@@ -103,42 +71,31 @@ namespace KCDModMerger.Mods
         ///     Finds the files in zip.
         /// </summary>
         /// <param name="file">The file.</param>
-        /// <param name="filename">The filename.</param>
-        /// <param name="logBuilder">The log builder.</param>
         /// <returns></returns>
-        private List<ModFile> FindFilesInZIP(ModFile file, string filename, StringBuilder logBuilder)
+        private List<ModFile> FindFilesInZIP(ModFile file)
         {
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Searching in " + filename));
             var zippedFiles = new List<ModFile>();
 
-            using (var fs = File.Open(file.FileName, FileMode.Open))
+            using (var fs = File.Open(file.PakFilePath + "\\" + file.PakFileName, FileMode.Open))
             {
                 using (var zip = new ZipArchive(fs))
                 {
                     foreach (var entry in zip.Entries)
+                    {
                         if (entry.FullName.Contains(".") && !DISALLOWED_FILETYPES.Any(s => entry.FullName.EndsWith(s)))
-                            if (file.FilePath.EndsWith("Localization"))
+                        {
+                            if (file.IsLocalization)
                             {
-                                logBuilder.AppendLine(Logger.BuildLogWithDate(
-                                    "Found Localization File " + file.FileName.Split('\\').Last() + "\\" +
-                                    entry.FullName, true));
-                                zippedFiles.Add(new ModFile(
-                                    file.FileName.Split('\\').Last() + "\\" + entry.FullName,
-                                    manifest.DisplayName,
-                                    file.FilePath, file.FileName));
+                                zippedFiles.Add(new ModFile(this.manifest.DisplayName, entry.FullName, file.PakFileName, file.PakFilePath, false, true));
                             }
                             else
                             {
-                                logBuilder.AppendLine(Logger.BuildLogWithDate(
-                                    "Found Data File " + entry.FullName,
-                                    true));
-                                zippedFiles.Add(new ModFile(entry.FullName, manifest.DisplayName, file.FilePath,
-                                    file.FileName));
+                                zippedFiles.Add(new ModFile(this.manifest.DisplayName, entry.FullName, file.PakFileName, file.PakFilePath, false, false));
                             }
+                        }
+                    }
                 }
             }
-
-            if (zippedFiles.Count == 0) logBuilder.AppendLine(Logger.BuildLogWithDate("Found 0 Files!"));
 
             return zippedFiles;
         }
@@ -146,72 +103,53 @@ namespace KCDModMerger.Mods
         /// <summary>
         ///     Manages the paks.
         /// </summary>
-        private void ManagePaks(StringBuilder logBuilder)
+        private void ManagePaks()
         {
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Starting to manage Paks"));
-
-            FindPaks(logBuilder);
-
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Searching for actual files in Paks"));
+            FindPaks();
 
             var zippedFiles = new List<ModFile>();
             foreach (var file in Files)
             {
-                var parts = file.FileName.Split('\\');
-                var filename = parts[parts.Length - 3] + "\\" + parts[parts.Length - 2] + "\\" +
-                               parts[parts.Length - 1];
-
-                var isRAR = CheckForRar(file.FileName, filename, logBuilder);
+                var newPath = file.PakFilePath + "\\" + file.PakFileName + ".extracted";
+                var oldPath = file.PakFilePath + "\\" + file.PakFileName;
 
                 // Replace RAR with ZIP
-                if (isRAR)
+                if (CheckForRar(oldPath))
                 {
-                    logBuilder.AppendLine(Logger.BuildLogWithDate("Replacing RAR with ZIP"));
-
-                    Directory.CreateDirectory(file.FilePath + "\\TEMP_EXTRACT");
+                    Directory.CreateDirectory(file.PakFilePath + "\\TEMP_EXTRACT");
                     using (var rar = new Unrar(file.FileName))
                     {
                         rar.Open(Unrar.OpenMode.Extract);
                         rar.ReadHeader();
                         while (rar.CurrentFile != null)
                         {
-                            rar.ExtractToDirectory(file.FilePath + "\\TEMP_EXTRACT");
+                            rar.ExtractToDirectory(file.PakFilePath + "\\TEMP_EXTRACT");
                             rar.ReadHeader();
                         }
 
                         rar.Close();
                     }
 
-                    logBuilder.AppendLine(Logger.BuildLogWithDate("Extracted RAR!"));
+                    ZipFile.CreateFromDirectory(file.PakFilePath + "\\TEMP_EXTRACT", newPath);
 
-                    ZipFile.CreateFromDirectory(file.FilePath + "\\TEMP_EXTRACT", file.FileName + ".extracted");
+                    Directory.Delete(file.PakFilePath + "\\TEMP_EXTRACT", true);
 
-                    Directory.Delete(file.FilePath + "\\TEMP_EXTRACT", true);
-
-                    logBuilder.AppendLine(Logger.BuildLogWithDate("Created ZIP!"));
-
-                    if (File.Exists(file.FileName + ".extracted") &&
-                        new FileInfo(file.FileName + ".extracted").Length > 30)
+                    if (File.Exists(newPath) &&
+                        new FileInfo(newPath).Length > 30)
                     {
-                        logBuilder.AppendLine(Logger.BuildLogWithDate("ZIP seems valid! Replacing RAR"));
-                        File.Move(file.FileName, file.FileName + ".backup");
-                        File.Move(file.FileName + ".extracted", file.FileName);
-                        logBuilder.AppendLine(Logger.BuildLogWithDate("Replaced RAR!"));
+                        File.Move(oldPath, oldPath + ".backup");
+                        File.Move(newPath, oldPath);
                     }
                     else
                     {
-                        logBuilder.AppendLine(Logger.BuildLogWithDate("ZIP does not contain any data!"));
-                        logBuilder.AppendLine(Logger.BuildLogWithDate("Critical Error: This should not be the case. Check the file format and perhaps manually convert it to ZIP!"));
                         MessageBox.Show(
                             "Critical Error: ZIP does not contain any data! Check the file format and perhaps manually convert it to ZIP!",
                             "KCDModMerger", MessageBoxButton.OK);
                     }
                 }
 
-                zippedFiles.AddRange(FindFilesInZIP(file, filename, logBuilder));
+                zippedFiles.AddRange(FindFilesInZIP(file));
             }
-
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Found total of " + zippedFiles.Count, true));
 
             DataFiles = zippedFiles.ToArray();
         }
@@ -220,44 +158,23 @@ namespace KCDModMerger.Mods
         ///     Checks for rar.
         /// </summary>
         /// <param name="file">The file.</param>
-        /// <param name="filename">The filename.</param>
-        /// <param name="logBuilder">The log builder.</param>
         /// <returns></returns>
-        private bool CheckForRar(string file, string filename, StringBuilder logBuilder)
+        private bool CheckForRar(string file)
         {
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Checking " + filename + " for RAR Encoding"));
+            if (!File.Exists(file)) return false;
 
-            if (File.Exists(file))
-                using (var sr = new StreamReader(file))
+            using (var sr = new StreamReader(file))
+            {
+                if (sr.Peek() >= 0)
                 {
-                    if (sr.Peek() >= 0)
-                    {
-                        var buffer = new char[5];
+                    var buffer = new char[5];
 
-                        sr.Read(buffer, 0, 5);
+                    sr.Read(buffer, 0, 5);
 
-                        logBuilder.AppendLine(Logger.BuildLogWithDate("The buffer: " + string.Join(", ", buffer),
-                            true));
-
-                        if (string.Join("", buffer).Replace(" ", "").ToLower().Contains("rar"))
-                        {
-                            logBuilder.AppendLine(Logger.BuildLogWithDate(filename + " is a RAR (F*** you)!"));
-                            return true;
-                        }
-
-                        logBuilder.AppendLine(Logger.BuildLogWithDate(filename + " is not a RAR at least!"));
-                        return false;
-                    }
-
-                    logBuilder.AppendLine(Logger.BuildLogWithDate(filename + " is empty?"));
-                    return false;
+                    return string.Join("", buffer).Replace(" ", "").ToLower().Contains("rar");
                 }
-
-            logBuilder.AppendLine(Logger.BuildLogWithDate(
-                filename +
-                " does not exist anymore! This is bad and means someone else tampered with the file system during this run."));
-
-            return false;
+                return false;
+            }
         }
 
         /// <summary>
@@ -282,15 +199,15 @@ namespace KCDModMerger.Mods
 
         #region Properties
 
-        public ModFile[] Files { get; set; } = new ModFile[0];
+        public ModFile[] Files { get; set; } = Array.Empty<ModFile>();
 
-        public string FolderName { get; set; } = "";
+        public string FolderName { get; set; }
 
-        public string[] Folders { get; set; } = new string[0];
+        public string[] Folders { get; set; }
 
-        public string[] MergedFiles { get; set; } = new string[0];
+        public string[] MergedFiles { get; set; } = Array.Empty<string>();
 
-        public ModFile[] DataFiles { get; set; } = new ModFile[0];
+        public ModFile[] DataFiles { get; set; } = Array.Empty<ModFile>();
 
         #endregion
     }
