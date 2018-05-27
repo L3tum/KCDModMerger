@@ -72,8 +72,8 @@ namespace KCDModMerger
         [Log]
         private void App_OnExit(object sender, ExitEventArgs e)
         {
-            Logging.Logger.Finalize();
             Settings.Default.Save();
+            Logging.Logger.Finalize();
         }
     }
 }

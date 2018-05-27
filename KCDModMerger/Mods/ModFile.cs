@@ -28,12 +28,15 @@ namespace KCDModMerger.Mods
             IsVanilla = isVanilla;
             IsLocalization = isLocalization;
             IsExtracted = isExtracted;
+
+            DisplayName = (IsLocalization ? PakFileName + "\\" : "") + FileName;
         }
 
         internal string ModName { get; }
         internal string FileName { get; }
         internal string PakFileName { get; }
         internal string PakFilePath { get; }
+        internal string DisplayName { get; }
         internal bool IsVanilla { get; }
         internal bool IsLocalization { get; }
         internal bool IsExtracted { get; }

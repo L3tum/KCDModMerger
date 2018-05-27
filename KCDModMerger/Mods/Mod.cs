@@ -2,11 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using KCDModMerger.Logging;
 using Schematrix;
@@ -18,10 +16,14 @@ namespace KCDModMerger.Mods
     [LogInterceptor]
     internal class Mod
     {
+        private readonly string disabledFolderName;
+
         private readonly string[] DISALLOWED_FILETYPES =
             {".tbl", ".skin", ".dds", ".cgf", ".cdf", ".chr", ".usm", ".sqcb", ".1", ".2", ".3", ".4", ".5"};
 
         internal ModManifest manifest;
+
+        internal ModStatus Status;
 
 
         /// <summary>
@@ -30,16 +32,47 @@ namespace KCDModMerger.Mods
         /// <param name="folderName">Name of the folder.</param>
         public Mod(string folderName)
         {
-            FolderName = folderName;
+            if (folderName.Contains(ModManager.directoryManager.disabledModDirectory))
+            {
+                FolderName = ModManager.directoryManager.modDirectory + folderName.Split('\\').Last();
+                disabledFolderName = folderName;
+                Status = ModStatus.Disabled;
+            }
+            else
+            {
+                FolderName = folderName;
+                disabledFolderName = ModManager.directoryManager.disabledModDirectory + FolderName.Split('\\').Last();
+                Status = ModStatus.Enabled;
+            }
 
             manifest = new ModManifest(folderName + "\\mod.manifest");
-            manifest.DisplayName = folderName.Split('\\').Last();
-            manifest.ReadManifest();
 
             Folders = GetFolders(folderName);
 
             // self-documented
             ManagePaks();
+        }
+
+        /// <summary>
+        /// Changes the status.
+        /// </summary>
+        /// <param name="status">The status.</param>
+        internal void ChangeStatus(ModStatus status)
+        {
+            if (status == ModStatus.Enabled && Status == ModStatus.Disabled)
+            {
+                ModManager.directoryManager.CopyDirectory(disabledFolderName, FolderName);
+                Directory.Delete(disabledFolderName);
+                ManagePaks();
+                Status = ModStatus.Enabled;
+            }
+            else if (status == ModStatus.Disabled && Status == ModStatus.Enabled)
+            {
+                ModManager.directoryManager.CopyDirectory(FolderName, disabledFolderName);
+                Directory.Delete(FolderName);
+                DataFiles = Array.Empty<ModFile>();
+                Status = ModStatus.Disabled;
+            }
         }
 
         /// <summary>
@@ -60,7 +93,8 @@ namespace KCDModMerger.Mods
                     var pakFilePath = pak.Replace("\\" + pakFileName, "");
                     var isLocalization = parts[parts.Length - 2].Equals("Localization");
 
-                    folderFiles.Add(new ModFile(this.manifest.DisplayName, "", pakFileName, pakFilePath, false, isLocalization));
+                    folderFiles.Add(new ModFile(manifest.DisplayName, "", pakFileName, pakFilePath, false,
+                        isLocalization));
                 }
             }
 
@@ -86,11 +120,13 @@ namespace KCDModMerger.Mods
                         {
                             if (file.IsLocalization)
                             {
-                                zippedFiles.Add(new ModFile(this.manifest.DisplayName, entry.FullName, file.PakFileName, file.PakFilePath, false, true));
+                                zippedFiles.Add(new ModFile(manifest.DisplayName, entry.FullName, file.PakFileName,
+                                    file.PakFilePath, false, true));
                             }
                             else
                             {
-                                zippedFiles.Add(new ModFile(this.manifest.DisplayName, entry.FullName, file.PakFileName, file.PakFilePath, false, false));
+                                zippedFiles.Add(new ModFile(manifest.DisplayName, entry.FullName, file.PakFileName,
+                                    file.PakFilePath, false, false));
                             }
                         }
                     }
@@ -173,6 +209,7 @@ namespace KCDModMerger.Mods
 
                     return string.Join("", buffer).Replace(" ", "").ToLower().Contains("rar");
                 }
+
                 return false;
             }
         }
@@ -199,6 +236,12 @@ namespace KCDModMerger.Mods
 
         #region Properties
 
+        /// <summary>
+        /// Paks in the Mod Directory
+        /// </summary>
+        /// <value>
+        /// The files.
+        /// </value>
         public ModFile[] Files { get; set; } = Array.Empty<ModFile>();
 
         public string FolderName { get; set; }
@@ -207,6 +250,12 @@ namespace KCDModMerger.Mods
 
         public string[] MergedFiles { get; set; } = Array.Empty<string>();
 
+        /// <summary>
+        /// Actual files in the Paks in the Mod Directory
+        /// </summary>
+        /// <value>
+        /// The data files.
+        /// </value>
         public ModFile[] DataFiles { get; set; } = Array.Empty<ModFile>();
 
         #endregion

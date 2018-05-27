@@ -12,14 +12,16 @@ namespace KCDModMerger.Mods
     internal class ModLoader
     {
         private readonly string modfolder;
+        private readonly string disabledModFolder;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ModLoader"/> class.
         /// </summary>
         /// <param name="modFolder">The mod folder.</param>
-        internal ModLoader(string modFolder)
+        internal ModLoader(string modFolder, string disabledModFolder)
         {
             modfolder = modFolder;
+            this.disabledModFolder = disabledModFolder;
         }
 
         /// <summary>
@@ -30,14 +32,15 @@ namespace KCDModMerger.Mods
         {
             List<Mod> mods = new List<Mod>();
 
-            if (!Directory.Exists(modfolder))
+            if (!Directory.Exists(modfolder) && !Directory.Exists(disabledModFolder))
             {
                 return Array.Empty<Mod>();
             }
 
             var modFolders = Directory.GetDirectories(modfolder);
+            modFolders = modFolders.Concat(Directory.GetDirectories(disabledModFolder)).ToArray();
 
-            Logging.Logger.Log("Found " + modFolders.Length + " Folders in Mods Directory!");
+            Logging.Logger.Log("Found " + modFolders.Length + " Folders!");
 
             foreach (string modFolder in modFolders)
             {

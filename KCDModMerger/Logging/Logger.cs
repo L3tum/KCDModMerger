@@ -134,7 +134,7 @@ namespace KCDModMerger.Logging
             // Free the writing thread
             bc.CompleteAdding();
             LogToFile();
-            File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\unrar.dll");
+            File.Delete(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "\\unrar.dll");
         }
 
         #region Utility
@@ -181,12 +181,25 @@ namespace KCDModMerger.Logging
 
         #region LogMethods
 
+        [Log]
+        private static void AddEntry(LogEntry entry)
+        {
+            try
+            {
+                bc.TryAdd(entry);
+            }
+            catch (InvalidOperationException e)
+            {
+                // Catch all
+            }
+        }
+
         // Just call this method to log something (it will return quickly because it just queue the work with bc.Add(p))
         [Log]
         internal static void Log(string msg, bool addExclamation = false)
         {
             LogEntry p = new LogEntry(msg, addExclamation, new StackTrace());
-            bc.Add(p);
+            AddEntry(p);
         }
 
         [Log]
@@ -217,7 +230,7 @@ namespace KCDModMerger.Logging
             }
 
             LogEntry p = new LogEntry(msg, addExclamation, new StackTrace());
-            bc.Add(p);
+            AddEntry(p);
         }
 
         /// <summary>
@@ -230,7 +243,7 @@ namespace KCDModMerger.Logging
         [Log]
         internal static void Log(string methodName, StackTrace stack, DateTime callTime, TimeSpan elapsed)
         {
-            bc.Add(new LogEntry(methodName, stack, callTime, elapsed));
+            AddEntry(new LogEntry(methodName, stack, callTime, elapsed));
         }
 
         /// <summary>
@@ -245,7 +258,7 @@ namespace KCDModMerger.Logging
         internal static void Log(string methodName, DateTime callTime, TimeSpan elapsed, object[] parameters,
             Exception e)
         {
-            bc.Add(new LogEntry(methodName, callTime, elapsed, parameters, e));
+            AddEntry(new LogEntry(methodName, callTime, elapsed, parameters, e));
         }
 
         /// <summary>
@@ -258,7 +271,7 @@ namespace KCDModMerger.Logging
         [Log]
         internal static void Log(string methodName, StackTrace stack, DateTime callTime, object[] parameters)
         {
-            bc.Add(new LogEntry(methodName, stack, callTime, parameters));
+            AddEntry(new LogEntry(methodName, stack, callTime, parameters));
         }
 
         #endregion

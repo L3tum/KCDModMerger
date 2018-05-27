@@ -1,4 +1,4 @@
-﻿#region usings
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using KCDModMerger.Annotations;
 using KCDModMerger.Logging;
@@ -24,25 +25,18 @@ namespace KCDModMerger.Mods
         private readonly string file;
         private readonly bool flush;
         private string humanReadableInfo = "";
-        private readonly StringBuilder logBuilder;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ModManifest"/> class.
+        ///     Initializes a new instance of the <see cref="ModManifest" /> class.
         /// </summary>
         /// <param name="file">The file.</param>
-        /// <param name="logger">The logger. Can be either null or a StringBuilder to append its output to the parent process.</param>
-        public ModManifest(string file, StringBuilder logger = null)
+        public ModManifest(string file)
         {
             this.file = file;
-            if (logger != null)
-            {
-                logBuilder = logger;
-            }
-            else
-            {
-                logBuilder = new StringBuilder();
-                flush = true;
-            }
+            var parts = file.Split('\\');
+            DisplayName = parts[parts.Length - 2];
+
+            Task.Run(() => { ReadManifest(); });
         }
 
         public string HumanReadableInfo
@@ -55,20 +49,19 @@ namespace KCDModMerger.Mods
             }
         }
 
+        [Log]
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
-        /// Reads the manifest.
+        ///     Reads the manifest.
         /// </summary>
-        public void ReadManifest()
+        private void ReadManifest()
         {
-            if (file != "")
+            if (!string.IsNullOrEmpty(file))
             {
-                logBuilder.AppendLine(
-                    Logger.BuildLogWithDate("Reading Manifest for " +
-                                            file.Split('\\').ElementAt(file.Split('\\').Length - 2)));
+                Logging.Logger.Log("Reading Manifest for " +
+                                   file.Split('\\').ElementAt(file.Split('\\').Length - 2));
                 if (File.Exists(file))
-                {
                     using (var sr = new StreamReader(file))
                     {
                         var doc = XDocument.Parse(sr.ReadToEnd()); //or XDocument.Load(baseFolder + "/mod.manifest")
@@ -76,16 +69,16 @@ namespace KCDModMerger.Mods
                         jsonText = Regex.Replace(jsonText, "\"\\?xml\":{[^}]+", "").Replace("{},", "{");
                         dynamic dyn = JsonConvert.DeserializeObject<ExpandoObject>(jsonText);
 
-                        logBuilder.AppendLine(Logger.BuildLogWithDate("Manifest: " + jsonText, true));
+                        Logging.Logger.Log("Manifest: " + jsonText, true);
 
                         if (this.HasProperty(dyn, "kcd_mod"))
                         {
-                            logBuilder.AppendLine(Logger.BuildLogWithDate("Found kcd_mod directive!"));
+                            Logging.Logger.Log("Found kcd_mod directive!");
                             var kcd_mod = dyn.kcd_mod;
 
                             if (this.HasProperty(kcd_mod, "info"))
                             {
-                                logBuilder.AppendLine(Logger.BuildLogWithDate("Found info directive!"));
+                                Logging.Logger.Log("Found info directive!");
                                 var info = kcd_mod.info;
 
                                 var properties = (IDictionary<string, object>) info;
@@ -95,174 +88,119 @@ namespace KCDModMerger.Mods
                                     {
                                         case "name":
                                         {
-                                            logBuilder.AppendLine(Logger.BuildLogWithDate("Found name: " + info.name,
-                                                true));
+                                            Logging.Logger.Log("Found name: " + info.name, true);
                                             DisplayName = info.name;
                                             break;
                                         }
                                         case "description":
                                         {
-                                            logBuilder.AppendLine(
-                                                Logger.BuildLogWithDate("Found description: " + info.description,
-                                                    true));
+                                            Logging.Logger.Log("Found description: " + info.description, true);
                                             Description = info.description;
                                             break;
                                         }
                                         case "author":
                                         {
-                                            logBuilder.AppendLine(
-                                                Logger.BuildLogWithDate("Found author: " + info.author, true));
+                                            Logging.Logger.Log("Found author: " + info.author, true);
                                             Author = info.author;
                                             break;
                                         }
                                         case "version":
                                         {
-                                            logBuilder.AppendLine(
-                                                Logger.BuildLogWithDate("Found version: " + info.version, true));
+                                            Logging.Logger.Log("Found version: " + info.version, true);
                                             Version = info.version;
                                             break;
                                         }
                                         case "created_on":
                                         {
-                                            logBuilder.AppendLine(
-                                                Logger.BuildLogWithDate("Found created_on: " + info.created_on, true));
+                                            Logging.Logger.Log("Found created_on: " + info.created_on, true);
                                             CreatedOn = info.created_on;
                                             break;
                                         }
                                     }
                             }
-                            else
-                            {
-                                logBuilder.AppendLine(Logger.BuildLogWithDate("Could not find info directive!"));
-                            }
 
                             if (this.HasProperty(kcd_mod, "supports") &&
                                 this.HasProperty(kcd_mod.supports, "kcd_version"))
                             {
-                                logBuilder.AppendLine(Logger.BuildLogWithDate("Found List of supported versions!"));
+                                Logging.Logger.Log("Found List of supported versions!");
                                 try
                                 {
                                     string s = string.Join(",", kcd_mod.supports.kcd_version);
-                                    logBuilder.AppendLine(Logger.BuildLogWithDate("Supported Versions: " + s, true));
+                                    Logging.Logger.Log("Supported Versions: " + s, true);
                                     VersionsSupported = s.Split(',');
                                 }
                                 catch (Exception e)
                                 {
-                                    logBuilder.AppendLine(
-                                        Logger.BuildLogWithDate("List of Supported Versions was faulty: " + e.Message,
-                                            true));
+                                    Logging.Logger.Log("List of Supported Versions was faulty: " + e.Message, true);
                                 }
-                            }
-                            else
-                            {
-                                logBuilder.AppendLine(Logger.BuildLogWithDate(
-                                    "Could not find supports directive (it doesn't really work anyways)!"));
                             }
 
                             if (this.HasProperty(kcd_mod, "merged_files") &&
                                 this.HasProperty(kcd_mod.merged_files, "file"))
                             {
-                                logBuilder.AppendLine(Logger.BuildLogWithDate("Found List of Merged Files!"));
+                                Logging.Logger.Log("Found List of Merged Files!");
                                 try
                                 {
                                     string s = string.Join(",", kcd_mod.merged_files.file);
-                                    logBuilder.AppendLine(Logger.BuildLogWithDate("Files:" + s, true));
+                                    Logging.Logger.Log("Files:" + s, true);
                                     MergedFiles = s.Split(',');
                                 }
                                 catch (Exception e)
                                 {
-                                    logBuilder.AppendLine(
-                                        Logger.BuildLogWithDate("List of Merged Files was faulty: " + e.Message, true));
+                                    Logging.Logger.Log("List of Merged Files was faulty: " + e.Message, true);
                                 }
                             }
                         }
-                        else
-                        {
-                            logBuilder.AppendLine(Logger.BuildLogWithDate("Could not find kcd_mod directive!"));
-                        }
                     }
-
-                    logBuilder.AppendLine(Logger.BuildLogWithDate("Finished Reading Manifest!"));
-                }
                 else
-                {
-                    logBuilder.AppendLine(Logger.BuildLogWithDate("Manifest does not exist!"));
-                }
+                    Logging.Logger.Log("Manifest does not exist!");
             }
             else
             {
-                logBuilder.AppendLine(Logger.BuildLogWithDate("No Manifest found!"));
+                Logging.Logger.Log("No Manifest found!");
             }
 
             HumanReadableInfo = GenerateHumanReadableInfo();
-
-            if (flush)
-            {
-                Logger.Log(logBuilder);
-            }
         }
 
         private string GenerateHumanReadableInfo()
         {
-            logBuilder.AppendLine(
-                Logger.BuildLogWithDate("Generating Human Readable Information for " + DisplayName));
+            Logging.Logger.Log("Generating Human Readable Information for " + DisplayName);
 
             var sb = new StringBuilder();
 
             sb.AppendLine(DisplayName);
 
-            if (Version != "")
-            {
-                sb.AppendLine(string.Concat("Version: ", Version));
-            }
+            if (!string.IsNullOrEmpty(Version)) sb.AppendLine(string.Concat("Version: ", Version));
 
-            if (Author != "")
-            {
-                sb.AppendLine(string.Concat("Author: ", Author));
-            }
+            if (!string.IsNullOrEmpty(Author)) sb.AppendLine(string.Concat("Author: ", Author));
 
-            if (CreatedOn != "")
-            {
-                sb.AppendLine(string.Concat("Created On: ", CreatedOn));
-            }
+            if (!string.IsNullOrEmpty(CreatedOn)) sb.AppendLine(string.Concat("Created On: ", CreatedOn));
 
-            if (Description != "")
-            {
-                sb.AppendLine(Description);
-            }
+            if (!string.IsNullOrEmpty(Description)) sb.AppendLine(Description);
 
             if (VersionsSupported.Length > 0)
-            {
                 sb.AppendLine(string.Concat("Supported Versions:", Environment.NewLine, Environment.NewLine,
                     string.Join(Environment.NewLine + Environment.NewLine, VersionsSupported)));
-            }
 
             if (MergedFiles.Length > 0)
-            {
                 sb.AppendLine(string.Concat("Merged Files:", Environment.NewLine, Environment.NewLine,
                     string.Join(Environment.NewLine + Environment.NewLine, MergedFiles)));
-            }
-
-            logBuilder.AppendLine(Logger.BuildLogWithDate("Generated Human Readable Information for " + DisplayName,
-                true));
 
             return sb.ToString();
         }
 
         /// <summary>
-        /// Determines whether the specified dynamic has property.
+        ///     Determines whether the specified dynamic has property.
         /// </summary>
         /// <param name="dyn">The dynamic.</param>
         /// <param name="property">The property.</param>
         /// <returns>
-        ///   <c>true</c> if the specified dynamic has property; otherwise, <c>false</c>.
+        ///     <c>true</c> if the specified dynamic has property; otherwise, <c>false</c>.
         /// </returns>
         private bool HasProperty(dynamic dyn, string property)
         {
-            if (dyn is string)
-            {
-                return false;
-            }
+            if (dyn is string) return false;
 
             return ((IDictionary<string, object>) dyn).ContainsKey(property);
         }

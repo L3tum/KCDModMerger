@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Xml;
+using KCDModMerger.Properties;
 
 #endregion
 
@@ -15,6 +16,7 @@ namespace KCDModMerger.Mods
     {
         private readonly string destPath;
         private readonly List<string> mergedFiles;
+        private VanillaFileManager vanillaFileManager;
 
         /*
          if (dirName == "Data")
@@ -42,6 +44,7 @@ namespace KCDModMerger.Mods
         {
             this.destPath = destPath;
             this.mergedFiles = mergedFiles ?? new List<string>();
+            vanillaFileManager = new VanillaFileManager(ModManager.directoryManager.kcdFolder);
 
             MergeFiles(filesToMerge);
 
@@ -109,7 +112,8 @@ namespace KCDModMerger.Mods
 
                     foreach (string localPak in localPaks)
                     {
-                        var existingPak = existingPaks.FirstOrDefault(e => e.Split('\\').Last() == localPak.Split('\\').Last());
+                        var existingPak =
+                            existingPaks.FirstOrDefault(e => e.Split('\\').Last() == localPak.Split('\\').Last());
 
                         if (!string.IsNullOrEmpty(existingPak))
                         {
@@ -187,15 +191,16 @@ namespace KCDModMerger.Mods
 
                 if (!baseFiles.ContainsKey(file.FileName))
                 {
-                    baseFiles.Add(file.FileName, file);
-                    continue;
+                    var s = vanillaFileManager.ExtractVanillaFile(file);
+                    baseFiles.Add(file.FileName,
+                        new ModFile("Vanilla", file.FileName, file.PakFileName, s, true, file.IsLocalization, true));
                 }
 
                 if (file.IsLocalization)
                 {
                     if (MergeLocalization(baseFiles[file.FileName], file, out string destFilePath))
                     {
-                        baseFiles[file.FileName] = new ModFile(file.ModName, file.FileName, file.PakFileName, destFilePath, false, true, true);
+                        baseFiles[file.FileName] = new ModFile("", file.FileName, "", destFilePath, false, true, true);
                     }
                     else
                     {
@@ -206,7 +211,7 @@ namespace KCDModMerger.Mods
                 {
                     if (MergeData(baseFiles[file.FileName], file, out string destFilePath))
                     {
-                        baseFiles[file.FileName] = new ModFile("", file.FileName, "", destFilePath, false, false);
+                        baseFiles[file.FileName] = new ModFile("", file.FileName, "", destFilePath, false, false, true);
                     }
                     else
                     {

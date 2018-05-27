@@ -2,12 +2,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -31,10 +29,8 @@ namespace KCDModMerger
         internal static DirectoryManager directoryManager;
         private readonly List<string> _mergedFiles = new List<string>();
         internal readonly Dictionary<string, List<string>> Conflicts = new Dictionary<string, List<string>>();
-        internal readonly List<ModFile> ConflictingModFiles = new List<ModFile>();
-        internal readonly ObservableCollection<string> ModNames = new ObservableCollection<string>();
+        internal readonly List<ModFile> ModFiles = new List<ModFile>();
         internal readonly List<Mod> Mods = new List<Mod>();
-        private string MOD_FOLDER;
 
         private Timer timer;
 
@@ -75,15 +71,13 @@ namespace KCDModMerger
             if (shouldUpdate)
             {
                 directoryManager = new DirectoryManager(Settings.Default.KCDPath);
-                MOD_FOLDER = Settings.Default.KCDPath + "//Mods";
                 UpdateModList();
             }
             else
             {
                 Logging.Logger.Log("Clearing previously found Stuff because root folder is not valid...");
-                ModNames.Clear();
                 Conflicts.Clear();
-                ConflictingModFiles.Clear();
+                ModFiles.Clear();
                 Mods.Clear();
                 Logging.Logger.Log("Cleared previously found Stuff!");
 
@@ -93,15 +87,86 @@ namespace KCDModMerger
             return shouldUpdate;
         }
 
+        internal void MergeFiles()
+        {
+            var filesToMerge = new List<ModFile>();
+
+            foreach (KeyValuePair<string, List<string>> conflict in Conflicts)
+            {
+                foreach (string s in conflict.Value)
+                {
+                    var modFile = ModFiles.FirstOrDefault(entry =>
+                        entry.DisplayName == conflict.Key && entry.ModName == s);
+
+                    if (modFile != null)
+                    {
+                        filesToMerge.Add(modFile);
+                    }
+                }
+            }
+
+            var modMerger = new ModMerger(directoryManager.kcdMerged, filesToMerge, _mergedFiles);
+        }
+
+        internal void ChangeModStatus(string modName, ModStatus status)
+        {
+            var mod = Mods.FirstOrDefault(entry => entry.manifest.DisplayName == modName);
+
+            if (mod != null)
+            {
+                mod.ChangeStatus(status);
+
+                if (status == ModStatus.Disabled)
+                {
+                    foreach (ModFile modFile in ((IEnumerable<ModFile>)ModFiles).Reverse())
+                    {
+                        if (modFile.ModName == mod.manifest.DisplayName)
+                        {
+                            ModFiles.Remove(modFile);
+                        }
+                    }
+
+                    foreach (KeyValuePair<string, List<string>> conflict in Conflicts.Reverse())
+                    {
+                        conflict.Value.Remove(mod.manifest.DisplayName);
+
+                        if (conflict.Value.Count < 2)
+                        {
+                            Conflicts.Remove(conflict.Key);
+                        }
+                    }
+                }
+                else if (status == ModStatus.Enabled)
+                {
+                    ModFiles.AddRange(mod.DataFiles);
+
+                    foreach (ModFile modDataFile in mod.DataFiles)
+                    {
+                        if (Conflicts.ContainsKey(modDataFile.DisplayName))
+                        {
+                            Conflicts[modDataFile.DisplayName].Add(mod.manifest.DisplayName);
+                        }
+                        else
+                        {
+                            Conflicts.Add(modDataFile.DisplayName, new List<string> {mod.manifest.DisplayName});
+                        }
+                    }
+
+                    CheckConflicts();
+                }
+
+                OnPropertyChanged(nameof(Conflicts));
+            }
+        }
+
         /// <summary>
         /// Updates the mod list.
         /// The actual Update is threaded!
         /// </summary>
         private void UpdateModList()
         {
-            ModNames.Clear();
             Conflicts.Clear();
-            ConflictingModFiles.Clear();
+            ModFiles.Clear();
             Mods.Clear();
 
             OnPropertyChanged(nameof(Conflicts));
@@ -109,26 +174,26 @@ namespace KCDModMerger
             Task.Run(() =>
             {
                 LegacyModLoader legacy =
-                    new LegacyModLoader(Settings.Default.KCDPath + "//Data", MOD_FOLDER);
+                    new LegacyModLoader(Settings.Default.KCDPath + "//Data", directoryManager.modDirectory);
                 legacy.UpdateLegacyMods();
 
-                ModLoader loader = new ModLoader(MOD_FOLDER);
-                var mods = loader.LoadMods();
+                ModLoader loader = new ModLoader(directoryManager.modDirectory, directoryManager.disabledModDirectory);
+                var mods = loader.LoadMods().ToList();
+                mods.Sort((x, y) =>
+                    string.CompareOrdinal(x.manifest.DisplayName, y.manifest.DisplayName));
 
                 foreach (Mod mod in mods)
                 {
                     foreach (ModFile modDataFile in mod.DataFiles)
                     {
-                        if (Conflicts.ContainsKey(modDataFile.FileName))
+                        if (Conflicts.ContainsKey(modDataFile.DisplayName))
                         {
-                            Conflicts[(modDataFile.IsLocalization ? modDataFile.PakFileName + "\\" : "") + modDataFile.FileName].Add(mod.manifest.DisplayName);
+                            Conflicts[modDataFile.DisplayName].Add(mod.manifest.DisplayName);
                         }
                         else
                         {
-                            Conflicts.Add((modDataFile.IsLocalization ? modDataFile.PakFileName + "\\" : "") + modDataFile.FileName, new List<string> {mod.manifest.DisplayName});
+                            Conflicts.Add(modDataFile.DisplayName, new List<string> {mod.manifest.DisplayName});
                         }
-
-                        ConflictingModFiles.Add(modDataFile);
                     }
 
                     if (mod.manifest.MergedFiles.Length > 0)
@@ -136,20 +201,23 @@ namespace KCDModMerger
                         _mergedFiles.AddRange(mod.manifest.MergedFiles);
                     }
 
+                    ModFiles.AddRange(mod.DataFiles);
                     Mods.Add(mod);
                 }
 
-                Mods.Sort((x, y) => string.CompareOrdinal(x.manifest.DisplayName, y.manifest.DisplayName));
-
-                foreach (KeyValuePair<string, List<string>> conflict in Conflicts)
-                {
-                    if (conflict.Value.Count < 2)
-                    {
-                        Conflicts.Remove(conflict.Key);
-                        ConflictingModFiles.RemoveAll(file => file.FileName == conflict.Key);
-                    }
-                }
+                CheckConflicts();
             }).ContinueWith(t => { OnPropertyChanged(nameof(Conflicts)); });
+        }
+
+        private void CheckConflicts()
+        {
+            foreach (KeyValuePair<string, List<string>> conflict in Conflicts.Reverse())
+            {
+                if (conflict.Value.Count < 2)
+                {
+                    Conflicts.Remove(conflict.Key);
+                }
+            }
         }
 
         /// <summary>

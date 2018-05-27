@@ -127,11 +127,14 @@
     <Compile Include="Mods\ModLoader.cs" />
     <Compile Include="Mods\ModManifest.cs" />
     <Compile Include="Mods\ModMerger.cs" />
+    <Compile Include="Mods\ModStatus.cs" />
     <Compile Include="Mods\VanillaFileManager.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="OSVersionInfo.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="UI\ItemVM.cs" />
+    <Compile Include="UI\MainViewModel.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="Unrar.cs" />
     <Page Include="MainWindow.xaml">

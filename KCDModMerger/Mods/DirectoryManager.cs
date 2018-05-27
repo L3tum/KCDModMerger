@@ -3,7 +3,7 @@
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using KCDModMerger.Properties;
+using KCDModMerger.Logging;
 
 #endregion
 
@@ -15,20 +15,25 @@ namespace KCDModMerger.Mods
         internal const string TEMP_MERGED_DIR = "\\MergedFiles";
         internal const string MODMANAGER_DIR = "\\ModMerger";
         internal const string MERGED_MOD = "\\zzz_ModMerger";
+        internal const string DISABLED_MOD_DIRECTORY = "\\Disabled_Mods";
 
-        private readonly string kcdFolder;
-        private readonly string kcdModManager;
-        private readonly string kcdTempFiles;
-        private string kcdMerged;
-        private readonly string kcdTempMerged;
+        internal readonly string kcdFolder;
+        internal readonly string kcdModManager;
+        internal readonly string kcdTempFiles;
+        internal readonly string kcdTempMerged;
+        internal readonly string kcdMerged;
+        internal readonly string disabledModDirectory;
+        internal readonly string modDirectory;
 
         internal DirectoryManager(string kcdFolder)
         {
             this.kcdFolder = kcdFolder;
+            modDirectory = kcdFolder + "\\Mods";
             kcdModManager = kcdFolder + MODMANAGER_DIR;
-            kcdTempFiles = kcdFolder + MODMANAGER_DIR + TEMP_FILES;
-            kcdTempMerged = kcdFolder + MODMANAGER_DIR + TEMP_MERGED_DIR;
-            kcdMerged = kcdFolder + "\\Mods" + MERGED_MOD;
+            kcdTempFiles = kcdModManager + TEMP_FILES;
+            kcdTempMerged = kcdModManager + TEMP_MERGED_DIR;
+            kcdMerged = modDirectory + MERGED_MOD;
+            disabledModDirectory = kcdFolder + DISABLED_MOD_DIRECTORY;
 
             LogTotalFreeSpace();
 
@@ -50,6 +55,29 @@ namespace KCDModMerger.Mods
             var vanillaDir = subDir.CreateSubdirectory("Vanilla");
             vanillaDir.CreateSubdirectory("Localization");
             vanillaDir.CreateSubdirectory("Data");
+
+            Directory.CreateDirectory(disabledModDirectory);
+        }
+
+        /// <summary>
+        /// Copies the directory.
+        /// </summary>
+        /// <param name="SourcePath">The source path.</param>
+        /// <param name="DestinationPath">The destination path.</param>
+        /// <returns></returns>
+        internal bool CopyDirectory(string SourcePath, string DestinationPath)
+        {
+            //Now Create all of the directories
+            foreach (string dirPath in Directory.GetDirectories(SourcePath, "*",
+                SearchOption.AllDirectories))
+                Directory.CreateDirectory(dirPath.Replace(SourcePath, DestinationPath));
+
+            //Copy all the files & Replaces any files with the same name
+            foreach (string newPath in Directory.GetFiles(SourcePath, "*.*",
+                SearchOption.AllDirectories))
+                File.Copy(newPath, newPath.Replace(SourcePath, DestinationPath), true);
+
+            return Directory.Exists(DestinationPath);
         }
 
         internal string CreateDirectories(ModFile file)
@@ -135,7 +163,7 @@ namespace KCDModMerger.Mods
             var dir = Directory.CreateDirectory(rootDir);
 
             dir = dir.CreateSubdirectory(dirName);
-            
+
             ZipFile.CreateFromDirectory(directory, dir.FullName + "\\" + dirName.ToLower() + ".pak");
             Logging.Logger.Log($"Packed {dirName} Archive!");
 
@@ -161,6 +189,7 @@ namespace KCDModMerger.Mods
             }
         }
 
+        [Log]
         ~DirectoryManager()
         {
             Utilities.DeleteFolder(kcdModManager);
