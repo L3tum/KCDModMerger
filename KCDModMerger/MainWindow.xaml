@@ -55,15 +55,17 @@
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate DataType="{x:Type classes:ItemVM}">
                                     <TextBlock Text="{Binding Text}">
-                                        <TextBlock.Foreground><SolidColorBrush Color="{Binding BackgroundColor}"></SolidColorBrush></TextBlock.Foreground>
-                                        </TextBlock>
+                                        <TextBlock.Foreground>
+                                            <SolidColorBrush Color="{Binding BackgroundColor}"></SolidColorBrush>
+                                        </TextBlock.Foreground>
+                                    </TextBlock>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
+                        </GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>
-            <ScrollViewer Grid.Column="1" Margin="10,13,10,32.667" MaxWidth="200"
+            <ScrollViewer Grid.Column="1" Margin="10,59,10,32.667" MaxWidth="200"
                           MaxHeight="{Binding RelativeSource={RelativeSource FindAncestor, 
                         AncestorType={x:Type Grid}}, Path=ActualHeight}"
                           RenderTransformOrigin="0.501,-0.137"
@@ -77,9 +79,9 @@
                         <TranslateTransform />
                     </TransformGroup>
                 </ScrollViewer.RenderTransform>
-                <TextBlock x:Name="modInfo" Grid.Column="1" Margin="9.667,46,10.333,32.667" TextWrapping="Wrap"
+                <TextBlock x:Name="modInfo" Grid.Column="1" TextWrapping="Wrap"
                            MaxWidth="200"
-                           RenderTransformOrigin="0.501,-0.137" />
+                           RenderTransformOrigin="0.501,-0.137" Height="346" />
             </ScrollViewer>
             <ListView x:Name="conflictFilesList" Grid.Column="3" Margin="7.333,72,9.333,32.667" SelectionMode="Single"
                       SelectionChanged="ConflictFilesListSelectionChanged"
@@ -173,6 +175,7 @@
             <Button x:Name="testThrowExceptionButton" Content="Throw Exception" Grid.Column="2"
                     HorizontalAlignment="Left" Margin="10,319,0,0" VerticalAlignment="Top" Width="171" Height="26"
                     Click="testThrowExceptionButton_Click" />
+            <Button x:Name="toggleModButton" Content="" Grid.Column="1" Height="23" Margin="10,12,10.333,0" VerticalAlignment="Top" Click="toggleModButton_clicked"/>
         </Grid>
     </Viewbox>
 </Window>

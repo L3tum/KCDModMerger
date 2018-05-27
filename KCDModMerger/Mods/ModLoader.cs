@@ -44,7 +44,7 @@ namespace KCDModMerger.Mods
 
             foreach (string modFolder in modFolders)
             {
-                var files = Directory.GetFiles(modFolder);
+                var files = Directory.GetFiles(modFolder, "*", SearchOption.AllDirectories);
 
                 if (files.Any(entry => entry.EndsWith(".manifest") || entry.EndsWith(".pak")))
                 {

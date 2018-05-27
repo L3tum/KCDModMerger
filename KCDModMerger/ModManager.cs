@@ -87,7 +87,7 @@ namespace KCDModMerger
             return shouldUpdate;
         }
 
-        internal void MergeFiles()
+        internal void MergeFiles(bool copyAllFiles, bool deleteOldFiles)
         {
             var filesToMerge = new List<ModFile>();
 
@@ -105,7 +105,26 @@ namespace KCDModMerger
                 }
             }
 
+            if (copyAllFiles)
+            {
+                foreach (ModFile modFile in ModFiles)
+                {
+                    if (!filesToMerge.Contains(modFile))
+                    {
+                        filesToMerge.Add(modFile);
+                    }
+                }
+            }
+
             var modMerger = new ModMerger(directoryManager.kcdMerged, filesToMerge, _mergedFiles);
+
+            if (deleteOldFiles)
+            {
+                foreach (ModFile modFile in filesToMerge)
+                {
+                    modFile.Delete();
+                }
+            }
         }
 
         internal void ChangeModStatus(string modName, ModStatus status)

@@ -1,7 +1,8 @@
-﻿#region usings
+﻿#region
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -32,29 +33,31 @@ namespace KCDModMerger.Mods
         /// <param name="folderName">Name of the folder.</param>
         public Mod(string folderName)
         {
+            Debug.WriteLine(folderName);
+            manifest = new ModManifest(folderName + "\\mod.manifest");
+
             if (folderName.Contains(ModManager.directoryManager.disabledModDirectory))
             {
-                FolderName = ModManager.directoryManager.modDirectory + folderName.Split('\\').Last();
+                FolderName = ModManager.directoryManager.modDirectory + "\\" + folderName.Split('\\').Last();
                 disabledFolderName = folderName;
                 Status = ModStatus.Disabled;
             }
             else
             {
                 FolderName = folderName;
-                disabledFolderName = ModManager.directoryManager.disabledModDirectory + FolderName.Split('\\').Last();
+                disabledFolderName = ModManager.directoryManager.disabledModDirectory + "\\" +
+                                     FolderName.Split('\\').Last();
+                Folders = GetFolders(FolderName);
+                // self-documented
+                ManagePaks();
                 Status = ModStatus.Enabled;
             }
 
-            manifest = new ModManifest(folderName + "\\mod.manifest");
-
-            Folders = GetFolders(folderName);
-
-            // self-documented
-            ManagePaks();
+            Debug.WriteLine(Status);
         }
 
         /// <summary>
-        /// Changes the status.
+        ///     Changes the status.
         /// </summary>
         /// <param name="status">The status.</param>
         internal void ChangeStatus(ModStatus status)
@@ -62,14 +65,15 @@ namespace KCDModMerger.Mods
             if (status == ModStatus.Enabled && Status == ModStatus.Disabled)
             {
                 ModManager.directoryManager.CopyDirectory(disabledFolderName, FolderName);
-                Directory.Delete(disabledFolderName);
+                Directory.Delete(disabledFolderName, true);
+                Folders = GetFolders(FolderName);
                 ManagePaks();
                 Status = ModStatus.Enabled;
             }
             else if (status == ModStatus.Disabled && Status == ModStatus.Enabled)
             {
                 ModManager.directoryManager.CopyDirectory(FolderName, disabledFolderName);
-                Directory.Delete(FolderName);
+                Directory.Delete(FolderName, true);
                 DataFiles = Array.Empty<ModFile>();
                 Status = ModStatus.Disabled;
             }
@@ -115,21 +119,13 @@ namespace KCDModMerger.Mods
                 using (var zip = new ZipArchive(fs))
                 {
                     foreach (var entry in zip.Entries)
-                    {
                         if (entry.FullName.Contains(".") && !DISALLOWED_FILETYPES.Any(s => entry.FullName.EndsWith(s)))
-                        {
                             if (file.IsLocalization)
-                            {
                                 zippedFiles.Add(new ModFile(manifest.DisplayName, entry.FullName, file.PakFileName,
                                     file.PakFilePath, false, true));
-                            }
                             else
-                            {
                                 zippedFiles.Add(new ModFile(manifest.DisplayName, entry.FullName, file.PakFileName,
                                     file.PakFilePath, false, false));
-                            }
-                        }
-                    }
                 }
             }
 
@@ -237,24 +233,24 @@ namespace KCDModMerger.Mods
         #region Properties
 
         /// <summary>
-        /// Paks in the Mod Directory
+        ///     Paks in the Mod Directory
         /// </summary>
         /// <value>
-        /// The files.
+        ///     The files.
         /// </value>
         public ModFile[] Files { get; set; } = Array.Empty<ModFile>();
 
-        public string FolderName { get; set; }
+        public string FolderName { get; set; } = "";
 
-        public string[] Folders { get; set; }
+        public string[] Folders { get; set; } = Array.Empty<string>();
 
         public string[] MergedFiles { get; set; } = Array.Empty<string>();
 
         /// <summary>
-        /// Actual files in the Paks in the Mod Directory
+        ///     Actual files in the Paks in the Mod Directory
         /// </summary>
         /// <value>
-        /// The data files.
+        ///     The data files.
         /// </value>
         public ModFile[] DataFiles { get; set; } = Array.Empty<ModFile>();
 

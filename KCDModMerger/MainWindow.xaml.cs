@@ -40,6 +40,7 @@ namespace KCDModMerger
         internal static bool isInformationVisible;
         internal static Dispatcher dispatcherGlobal;
         public readonly ObservableCollection<ItemVM> ModListItems = new ObservableCollection<ItemVM>();
+        private readonly MainViewModel viewModel;
         private readonly BackgroundWorker worker = new BackgroundWorker();
         private PerformanceCounter availableRamRounter;
         private PerformanceCounter cpuCounter;
@@ -47,7 +48,6 @@ namespace KCDModMerger
         private PerformanceCounter ramCounter;
         private PerformanceCounter threadsCounter;
         private Timer timer;
-        private readonly MainViewModel viewModel;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="MainWindow" /> class.
@@ -129,6 +129,7 @@ namespace KCDModMerger
             higherPriorityLabel.Visibility = Visibility.Hidden;
             mergeProgressBar.Visibility = Visibility.Hidden;
             mergingLabel.Visibility = Visibility.Hidden;
+            toggleModButton.Visibility = Visibility.Hidden;
 
             conflictingModsList.PreviewMouseMove += ModsListPreviewMouseMove;
 
@@ -244,7 +245,7 @@ namespace KCDModMerger
         {
             Logging.Logger.Log("Starting to merge");
 
-            ModMana.MergeFiles();
+            ModMana.MergeFiles(this.copyAllFilesButton.IsChecked, this.deleteOldFilesButton.IsChecked);
 
             Logging.Logger.Log("Finished Merge Job!");
         }
@@ -353,12 +354,20 @@ namespace KCDModMerger
                 {
                     selectedMod.manifest.PropertyChanged += HumanReadableInfoChanged;
 
-                    modInfo.Text = "Status: " + (ModMana.Mods[modList.SelectedIndex].Status == ModStatus.Enabled ? "Enabled" : "Disabled") + Environment.NewLine + selectedMod.manifest.HumanReadableInfo;
+                    modInfo.Text = "Status: " +
+                                   (ModMana.Mods[modList.SelectedIndex].Status == ModStatus.Enabled
+                                       ? "Enabled"
+                                       : "Disabled") + Environment.NewLine + selectedMod.manifest.HumanReadableInfo;
+                    toggleModButton.Visibility = Visibility.Visible;
+                    toggleModButton.Content = ModMana.Mods[modList.SelectedIndex].Status == ModStatus.Disabled
+                        ? "Enable Mod"
+                        : "Disable Mod";
                 }
             }
             else
             {
                 modInfo.Text = "";
+                toggleModButton.Visibility = Visibility.Hidden;
             }
         }
 
@@ -369,7 +378,9 @@ namespace KCDModMerger
         /// <param name="e">The <see cref="PropertyChangedEventArgs" /> instance containing the event data.</param>
         private void HumanReadableInfoChanged(object sender, PropertyChangedEventArgs e)
         {
-            modInfo.Text = "Status: " + (ModMana.Mods[modList.SelectedIndex].Status == ModStatus.Enabled ? "Enabled" : "Disabled") + Environment.NewLine + ModMana.Mods[modList.SelectedIndex].manifest.HumanReadableInfo;
+            modInfo.Text = "Status: " +
+                           (ModMana.Mods[modList.SelectedIndex].Status == ModStatus.Enabled ? "Enabled" : "Disabled") +
+                           Environment.NewLine + ModMana.Mods[modList.SelectedIndex].manifest.HumanReadableInfo;
         }
 
         /// <summary>
@@ -534,6 +545,18 @@ namespace KCDModMerger
         private void testThrowExceptionButton_Click(object sender, RoutedEventArgs e)
         {
             throw new Exception("This is a test");
+        }
+
+        private void toggleModButton_clicked(object sender, RoutedEventArgs e)
+        {
+            var selectedMod = ((ItemVM) modList.SelectedItem).Text;
+
+            if (selectedMod != null)
+            {
+                ModMana.ChangeModStatus(selectedMod,
+                    ((string) toggleModButton.Content).Contains("Enable") ? ModStatus.Enabled : ModStatus.Disabled);
+                toggleModButton.Content = "Disable Mod";
+            }
         }
 
         #region DragNDrop
