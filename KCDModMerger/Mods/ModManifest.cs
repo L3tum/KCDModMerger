@@ -23,7 +23,6 @@ namespace KCDModMerger.Mods
     internal class ModManifest : INotifyPropertyChanged
     {
         private readonly string file;
-        private readonly bool flush;
         private string humanReadableInfo = "";
 
         /// <summary>
@@ -213,7 +212,7 @@ namespace KCDModMerger.Mods
 
         #region Properties
 
-        private ModFile[] dataFiles = new ModFile[0];
+        private ModFile[] dataFiles = Array.Empty<ModFile>();
         public string Author { get; set; } = "";
 
         public string CreatedOn { get; set; } = "";
@@ -222,17 +221,17 @@ namespace KCDModMerger.Mods
 
         public string DisplayName { get; set; } = "";
 
-        public ModFile[] Files { get; set; } = new ModFile[0];
+        public ModFile[] Files { get; set; } = Array.Empty<ModFile>();
 
         public string FolderName { get; set; } = "";
 
-        public string[] Folders { get; set; } = new string[0];
+        public string[] Folders { get; set; } = Array.Empty<string>();
 
         public string Version { get; set; } = "";
 
-        public string[] VersionsSupported { get; set; } = new string[0];
+        public string[] VersionsSupported { get; set; } = Array.Empty<string>();
 
-        public string[] MergedFiles { get; set; } = new string[0];
+        public string[] MergedFiles { get; set; } = Array.Empty<string>();
 
         public ModFile[] DataFiles
         {

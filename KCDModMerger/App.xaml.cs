@@ -34,18 +34,14 @@ namespace KCDModMerger
             Logging.Logger.Log("Cleared User-defined Settings!");
             Settings.Default.Reset();
 #endif
-            //TODO: ILMerge?
-            Logger.Log("Deleting Old Log File");
-            if (File.Exists(Logger.LOG_FILE)) File.Delete(Logger.LOG_FILE);
-            Logger.Log("Deleted Old Log File!");
 
-            Logger.Log("Initializing ModMerger");
+            Logging.Logger.Log("Initializing ModMerger");
 
             Utilities.PrintInfo();
 
             LoadUnrar();
 
-            Logger.Log("Initialized ModMerger!");
+            Logging.Logger.Log("Initialized ModMerger!");
         }
 
         private void LoadUnrar()

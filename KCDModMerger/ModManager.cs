@@ -87,7 +87,7 @@ namespace KCDModMerger
             return shouldUpdate;
         }
 
-        internal void MergeFiles(bool copyAllFiles, bool deleteOldFiles)
+        internal void MergeFiles(bool copyAllFiles = false, bool deleteOldFiles = false)
         {
             var filesToMerge = new List<ModFile>();
 

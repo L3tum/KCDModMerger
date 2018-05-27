@@ -245,7 +245,7 @@ namespace KCDModMerger
         {
             Logging.Logger.Log("Starting to merge");
 
-            ModMana.MergeFiles(this.copyAllFilesButton.IsChecked, this.deleteOldFilesButton.IsChecked);
+            ModMana.MergeFiles(copyAllFilesButton.IsChecked ?? false, deleteOldFilesButton.IsChecked ?? false);
 
             Logging.Logger.Log("Finished Merge Job!");
         }
