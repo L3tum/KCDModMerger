@@ -133,7 +133,7 @@ namespace KCDModMerger.Mods
                         {
                             var destFolder = CreateDirectories(file);
 
-                            using (FileStream destFile = File.Open(destFolder + "\\" + file.FileName,
+                            using (FileStream destFile = File.Open(destFolder + "\\" + file.FileName.Split('/').Last(),
                                 FileMode.OpenOrCreate))
                             {
                                 using (Stream srcFile = zippedFile.Open())
@@ -142,7 +142,7 @@ namespace KCDModMerger.Mods
                                 }
                             }
 
-                            return destFolder + "\\" + file.FileName;
+                            return destFolder + "\\" + file.FileName.Split('/').Last();
                         }
                     }
                 }

@@ -27,7 +27,7 @@ namespace KCDModMerger.Logging
 
         internal static string LOG_FILE =
             Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) +
-            "\\KCDModMerger_Test.log";
+            "\\KCDModMerger.log";
 
         private static readonly List<LogEntry> final = new List<LogEntry>();
 

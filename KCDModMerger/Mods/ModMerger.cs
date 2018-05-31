@@ -48,8 +48,8 @@ namespace KCDModMerger.Mods
 
             MergeFiles(filesToMerge);
 
-            var dataPak = ModManager.directoryManager.PakDirectory(destPath + "\\Data");
-            var localDir = new DirectoryInfo(destPath + "\\Localization");
+            var dataPak = ModManager.directoryManager.PakDirectory(ModManager.directoryManager.kcdTempMerged + "\\Data");
+            var localDir = new DirectoryInfo(ModManager.directoryManager.kcdTempMerged + "\\Localization");
             var localPaks = new List<string>();
 
             foreach (DirectoryInfo directory in localDir.GetDirectories())
@@ -103,11 +103,11 @@ namespace KCDModMerger.Mods
 
         private void CopyPakkedLocal(List<string> localPaks)
         {
-            if (Directory.Exists(DirectoryManager.MERGED_MOD))
+            if (Directory.Exists(destPath))
             {
-                if (Directory.Exists(DirectoryManager.MERGED_MOD + "\\Localization"))
+                if (Directory.Exists(destPath + "\\Localization"))
                 {
-                    var existingPaks = new DirectoryInfo(DirectoryManager.MERGED_MOD + "\\Localization").GetFiles()
+                    var existingPaks = new DirectoryInfo(destPath + "\\Localization").GetFiles()
                         .Select(e => e.FullName).ToList();
 
                     foreach (string localPak in localPaks)
@@ -119,18 +119,31 @@ namespace KCDModMerger.Mods
                         {
                             MergePaks(existingPak, localPak);
                         }
+                        else
+                        {
+                            File.Copy(localPak, destPath + "\\Localization\\" + localPak.Split('\\').Last());
+                        }
                     }
+
+                    return;
                 }
+            }
+
+            Directory.CreateDirectory(destPath + "\\Localization");
+
+            foreach (string localPak in localPaks)
+            {
+                File.Copy(localPak, destPath + "\\Localization\\" + localPak.Split('\\').Last());
             }
         }
 
         private void CopyPakkedData(string dataPak)
         {
-            if (Directory.Exists(DirectoryManager.MERGED_MOD))
+            if (Directory.Exists(destPath))
             {
-                if (Directory.Exists(DirectoryManager.MERGED_MOD + "\\Data"))
+                if (Directory.Exists(destPath + "\\Data"))
                 {
-                    var existingPaks = new DirectoryInfo(DirectoryManager.MERGED_MOD + "\\Data").GetFiles();
+                    var existingPaks = new DirectoryInfo(destPath + "\\Data").GetFiles();
 
                     if (existingPaks.Length > 0)
                     {
@@ -143,7 +156,9 @@ namespace KCDModMerger.Mods
                 }
             }
 
-            File.Copy(dataPak, DirectoryManager.MERGED_MOD + "\\Data\\" + dataPak.Split('\\').Last());
+            Directory.CreateDirectory(destPath + "\\Data");
+
+            File.Copy(dataPak, destPath + "\\Data\\" + dataPak.Split('\\').Last());
         }
 
         /// <summary>
@@ -192,8 +207,17 @@ namespace KCDModMerger.Mods
                 if (!baseFiles.ContainsKey(file.FileName))
                 {
                     var s = vanillaFileManager.ExtractVanillaFile(file);
-                    baseFiles.Add(file.FileName,
-                        new ModFile("Vanilla", file.FileName, file.PakFileName, s, true, file.IsLocalization, true));
+                    if (!string.IsNullOrEmpty(s))
+                    {
+                        baseFiles.Add(file.FileName,
+                            new ModFile("Vanilla", file.FileName, file.PakFileName, s, true, file.IsLocalization,
+                                true));
+                    }
+                    else
+                    {
+                        baseFiles.Add(file.FileName, file);
+                        continue;
+                    }
                 }
 
                 if (file.IsLocalization)
@@ -223,7 +247,7 @@ namespace KCDModMerger.Mods
 
         private bool MergeData(ModFile baseFile, ModFile overwriteFile, out string destFilePath)
         {
-            var path = destPath + "\\Data";
+            var path = ModManager.directoryManager.kcdTempMerged + "\\Data";
 
             // File is under a subdirectory in the zip which we need to mimick on the file system
             if (baseFile.FileName.Contains("/"))
@@ -231,7 +255,8 @@ namespace KCDModMerger.Mods
                 var parts = baseFile.FileName.Replace("/", "\\").Split('\\');
 
                 // We need to remove the actual file name from the directory path
-                var convertedParts = parts.ToList().Remove(parts[parts.Length - 1]);
+                var convertedParts = parts.ToList();
+                convertedParts.Remove(parts[parts.Length - 1]);
 
                 path += "\\" + string.Join("\\", convertedParts);
             }
@@ -240,7 +265,7 @@ namespace KCDModMerger.Mods
 
             var file = ModManager.directoryManager.ExtractFile(overwriteFile);
 
-            destFilePath = path + "\\" + overwriteFile.FileName;
+            destFilePath = path + "\\" + overwriteFile.FileName.Split('/').Last();
 
             // No basefile, just copy overwriteFile
             if (baseFile.Equals(overwriteFile))
@@ -267,7 +292,7 @@ namespace KCDModMerger.Mods
 
         private bool MergeLocalization(ModFile baseFile, ModFile overwriteFile, out string destFilePath)
         {
-            var path = destPath + "\\Localization\\" + overwriteFile.PakFileName.Replace(".pak", "");
+            var path = ModManager.directoryManager.kcdTempMerged + "\\Localization\\" + overwriteFile.PakFileName.Replace(".pak", "");
 
             Directory.CreateDirectory(path);
 

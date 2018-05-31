@@ -18,7 +18,6 @@ namespace KCDModMerger
     /// <summary>
     ///     Provides detailed information about the host operating system.
     /// </summary>
-    [LogInterceptor]
     public static class OSVersionInfo
     {
         #region SERVICE PACK

@@ -54,7 +54,6 @@ namespace Schematrix
     /// Calls unrar DLL via platform invocation services (pinvoke).
     /// DLL is available at http://www.rarlab.com/rar/UnRARDLL.exe
     /// </summary>
-    [LogInterceptor]
     public class Unrar : IDisposable
 	{
 		#region Unrar DLL enumerations

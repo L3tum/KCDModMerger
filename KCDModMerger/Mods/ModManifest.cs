@@ -19,7 +19,6 @@ using Newtonsoft.Json;
 
 namespace KCDModMerger.Mods
 {
-    [LogInterceptor]
     internal class ModManifest : INotifyPropertyChanged
     {
         private readonly string file;
@@ -35,7 +34,7 @@ namespace KCDModMerger.Mods
             var parts = file.Split('\\');
             DisplayName = parts[parts.Length - 2];
 
-            Task.Run(() => { ReadManifest(); });
+            ReadManifest();
         }
 
         public string HumanReadableInfo
@@ -48,12 +47,12 @@ namespace KCDModMerger.Mods
             }
         }
 
-        [Log]
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
         ///     Reads the manifest.
         /// </summary>
+        [LogInterceptor]
         private void ReadManifest()
         {
             if (!string.IsNullOrEmpty(file))
@@ -162,6 +161,7 @@ namespace KCDModMerger.Mods
             HumanReadableInfo = GenerateHumanReadableInfo();
         }
 
+        [LogInterceptor]
         private string GenerateHumanReadableInfo()
         {
             Logging.Logger.Log("Generating Human Readable Information for " + DisplayName);

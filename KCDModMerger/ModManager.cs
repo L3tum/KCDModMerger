@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -28,7 +29,7 @@ namespace KCDModMerger
         internal const string VERSION = "1.4 'Ariadnes Threads'";
         internal static DirectoryManager directoryManager;
         private readonly List<string> _mergedFiles = new List<string>();
-        internal readonly Dictionary<string, List<string>> Conflicts = new Dictionary<string, List<string>>();
+        internal readonly SortedDictionary<string, List<string>> Conflicts = new SortedDictionary<string, List<string>>();
         internal readonly List<ModFile> ModFiles = new List<ModFile>();
         internal readonly List<Mod> Mods = new List<Mod>();
 
@@ -91,7 +92,7 @@ namespace KCDModMerger
         {
             var filesToMerge = new List<ModFile>();
 
-            foreach (KeyValuePair<string, List<string>> conflict in Conflicts)
+            foreach (KeyValuePair<string, List<string>> conflict in Conflicts.Where(entry => entry.Value.Count > 1))
             {
                 foreach (string s in conflict.Value)
                 {
@@ -148,11 +149,6 @@ namespace KCDModMerger
                     foreach (KeyValuePair<string, List<string>> conflict in Conflicts.Reverse())
                     {
                         conflict.Value.Remove(mod.manifest.DisplayName);
-
-                        if (conflict.Value.Count < 2)
-                        {
-                            Conflicts.Remove(conflict.Key);
-                        }
                     }
                 }
                 else if (status == ModStatus.Enabled)
@@ -170,8 +166,6 @@ namespace KCDModMerger
                             Conflicts.Add(modDataFile.DisplayName, new List<string> {mod.manifest.DisplayName});
                         }
                     }
-
-                    CheckConflicts();
                 }
 
                 OnPropertyChanged(nameof(Conflicts));
@@ -223,20 +217,7 @@ namespace KCDModMerger
                     ModFiles.AddRange(mod.DataFiles);
                     Mods.Add(mod);
                 }
-
-                CheckConflicts();
             }).ContinueWith(t => { OnPropertyChanged(nameof(Conflicts)); });
-        }
-
-        private void CheckConflicts()
-        {
-            foreach (KeyValuePair<string, List<string>> conflict in Conflicts.Reverse())
-            {
-                if (conflict.Value.Count < 2)
-                {
-                    Conflicts.Remove(conflict.Key);
-                }
-            }
         }
 
         /// <summary>

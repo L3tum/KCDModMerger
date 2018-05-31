@@ -33,7 +33,6 @@ namespace KCDModMerger.Mods
         /// <param name="folderName">Name of the folder.</param>
         public Mod(string folderName)
         {
-            Debug.WriteLine(folderName);
             manifest = new ModManifest(folderName + "\\mod.manifest");
 
             if (folderName.Contains(ModManager.directoryManager.disabledModDirectory))
@@ -52,8 +51,6 @@ namespace KCDModMerger.Mods
                 ManagePaks();
                 Status = ModStatus.Enabled;
             }
-
-            Debug.WriteLine(Status);
         }
 
         /// <summary>

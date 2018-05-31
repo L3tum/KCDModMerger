@@ -1,4 +1,4 @@
-﻿#region usings
+﻿#region
 
 using System;
 using System.Diagnostics;
@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Xml;
+using KCDModMerger.Logging;
 using Microsoft.Win32;
 
 #endregion
@@ -20,7 +21,7 @@ namespace KCDModMerger
     internal static class Utilities
     {
         /// <summary>
-        /// Invokes if required.
+        ///     Invokes if required.
         /// </summary>
         /// <param name="control">The control.</param>
         /// <param name="action">The action.</param>
@@ -35,7 +36,7 @@ namespace KCDModMerger
         }
 
         /// <summary>
-        /// Disables the button.
+        ///     Disables the button.
         /// </summary>
         /// <param name="button">The button.</param>
         /// <param name="tooltip">The tooltip.</param>
@@ -49,7 +50,7 @@ namespace KCDModMerger
         }
 
         /// <summary>
-        /// Enables the button.
+        ///     Enables the button.
         /// </summary>
         /// <param name="button">The button.</param>
         /// <param name="tooltip">The tooltip.</param>
@@ -63,37 +64,34 @@ namespace KCDModMerger
         }
 
         /// <summary>
-        /// Determines whether this instance is default.
+        ///     Determines whether this instance is default.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="value">The value.</param>
         /// <returns>
-        ///   <c>true</c> if the specified value is default; otherwise, <c>false</c>.
+        ///     <c>true</c> if the specified value is default; otherwise, <c>false</c>.
         /// </returns>
         internal static bool IsDefault<T>(this T value) where T : struct
         {
-            bool isDefault = value.Equals(default(T));
+            var isDefault = value.Equals(default(T));
 
             return isDefault;
         }
 
         /// <summary>
-        /// Creates a directory.
+        ///     Creates a directory.
         /// </summary>
         /// <param name="directory">The directory.</param>
         /// <returns></returns>
         internal static DirectoryInfo CreateDirectory(string directory)
         {
-            if (Directory.Exists(directory))
-            {
-                return null;
-            }
+            if (Directory.Exists(directory)) return null;
 
             return Directory.CreateDirectory(directory);
         }
 
         /// <summary>
-        /// Writes a manifest.
+        ///     Writes a manifest.
         /// </summary>
         /// <param name="fileName">Name of the file.</param>
         /// <param name="name">The name.</param>
@@ -105,12 +103,9 @@ namespace KCDModMerger
         internal static bool WriteManifest(string fileName, string name, string desc, string version, string author,
             string createdOn)
         {
-            if (File.Exists(fileName))
-            {
-                return false;
-            }
+            if (File.Exists(fileName)) return false;
 
-            using (XmlWriter xml = XmlWriter.Create(fileName))
+            using (var xml = XmlWriter.Create(fileName))
             {
                 xml.WriteStartDocument();
                 xml.WriteStartElement("kcd_mod");
@@ -129,7 +124,7 @@ namespace KCDModMerger
         }
 
         /// <summary>
-        /// Copies a file.
+        ///     Copies a file.
         /// </summary>
         /// <param name="srcFile">The source file.</param>
         /// <param name="destFile">The dest file.</param>
@@ -137,39 +132,30 @@ namespace KCDModMerger
         /// <returns></returns>
         internal static bool CopyFile(string srcFile, string destFile, bool deleteOldFile)
         {
-            if (File.Exists(destFile) || !File.Exists(srcFile))
-            {
-                return false;
-            }
+            if (File.Exists(destFile) || !File.Exists(srcFile)) return false;
 
             File.Copy(srcFile, destFile);
 
-            if (!File.Exists(destFile))
-            {
-                return false;
-            }
+            if (!File.Exists(destFile)) return false;
 
-            if (deleteOldFile)
-            {
-                File.Delete(srcFile);
-            }
+            if (deleteOldFile) File.Delete(srcFile);
 
             return true;
         }
 
         /// <summary>
-        /// Runs the kdiff3.
+        ///     Runs the kdiff3.
         /// </summary>
         /// <param name="args">The arguments.</param>
         internal static void RunKDiff3(string args)
         {
-            Process process = new Process
+            var process = new Process
             {
                 StartInfo =
                 {
                     FileName = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) +
                                "\\Tools\\KDiff3\\kdiff3.exe",
-                    Arguments = args
+                    Arguments = args + " --cs \"ShowInfoDialogs=0\" --cs \"AutoAdvance=1\""
                 }
             };
             process.Start();
@@ -177,7 +163,7 @@ namespace KCDModMerger
         }
 
         /// <summary>
-        /// Deletes a folder.
+        ///     Deletes a folder.
         /// </summary>
         /// <param name="folder">The folder.</param>
         internal static void DeleteFolder(string folder)
@@ -212,19 +198,16 @@ namespace KCDModMerger
                         }
                     }
 
-                    if (!Directory.Exists(folder))
-                    {
-                        break;
-                    }
+                    if (!Directory.Exists(folder)) break;
                 }
 
                 if (!Directory.Exists(folder))
                 {
-                    Logging.Logger.Log("Deleted " + folder + " Directory!");
+                    Logger.Log("Deleted " + folder + " Directory!");
                 }
                 else
                 {
-                    Logging.Logger.Log("Tried deleting " + folder + " Directory but failed!");
+                    Logger.Log("Tried deleting " + folder + " Directory but failed!");
                     MessageBox.Show("Could not clean " + folder +
                                     " Directory! Future Operation of this program is not guaranteed!",
                         "KCDModMerger", MessageBoxButton.OK);
@@ -233,7 +216,7 @@ namespace KCDModMerger
         }
 
         /// <summary>
-        /// Prints the information.
+        ///     Prints the information.
         /// </summary>
         internal static void PrintInfo()
         {
@@ -248,12 +231,12 @@ namespace KCDModMerger
             Logger.Log(string.Format("Version: {0}", OSVersionInfo.VersionString), true);
             Logger.Log(".Net Version: " + GetDotNetVerson(), true);
 
-            Logger.Log(GetProcessorInfo());
+            GetProcessorInfo();
 
-            Logger.Log(GetGPUInfo());
+            GetGPUInfo();
 
             NativeMethods.GetPhysicallyInstalledSystemMemory(out var memKb);
-            Logger.Log("Memory: " + (memKb / 1024 / 1024) + " GiB!");
+            Logger.Log("Memory: " + memKb / 1024 / 1024 + " GiB!");
             Logger.Log(string.Format("OS: {0}", string.Join("", ("" + OSVersionInfo.OSBits).Reverse())), true);
             Logger.Log(string.Format("Program: {0}", string.Join("", ("" + OSVersionInfo.ProgramBits).Reverse())),
                 true);
@@ -265,34 +248,25 @@ namespace KCDModMerger
         }
 
         /// <summary>
-        /// Gets the processor information.
+        ///     Gets the processor information.
         /// </summary>
         /// <returns></returns>
-        private static string GetProcessorInfo()
+        private static void GetProcessorInfo()
         {
-            var indentation = Logger.BuildLogWithDate("").Length;
-            var indent = "";
+            Logger.Log("Processors: " + Environment.NewLine);
 
-            for (var i = 0; i < indentation; i++)
-            {
-                indent += " ";
-            }
-
-            var log = Logger.BuildLog("Processors: " + Environment.NewLine);
-
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(
+            var searcher = new ManagementObjectSearcher(
                 "select * from Win32_Processor");
             var props = searcher.Get();
 
-            foreach (ManagementBaseObject prop in props)
+            foreach (var prop in props)
             {
                 var name = "";
                 var cores = "";
                 var clockSpeed = "";
                 var adressWidth = "";
 
-                foreach (PropertyData propProperty in prop.Properties)
-                {
+                foreach (var propProperty in prop.Properties)
                     switch (propProperty.Name)
                     {
                         case "Name":
@@ -316,46 +290,34 @@ namespace KCDModMerger
                             break;
                         }
                     }
-                }
 
-                log += indent + "Name: " + name + Environment.NewLine;
-                log += indent + "Logical Cores: " + cores + Environment.NewLine;
-                log += indent + "Clock Speed: " + clockSpeed + "Mhz" + Environment.NewLine;
-                log += indent + "Address Width: " + adressWidth + "Bit" + Environment.NewLine;
+                Logger.Log("\tName: " + name + Environment.NewLine);
+                Logger.Log("\tLogical Cores: " + cores + Environment.NewLine);
+                Logger.Log("\tClock Speed: " + clockSpeed + "Mhz" + Environment.NewLine);
+                Logger.Log("\tAddress Width: " + adressWidth + "Bit" + Environment.NewLine);
             }
-
-            return log;
         }
 
         /// <summary>
-        /// Gets the gpu information.
+        ///     Gets the gpu information.
         /// </summary>
         /// <returns></returns>
-        private static string GetGPUInfo()
+        private static void GetGPUInfo()
         {
-            var indentation = Logger.BuildLogWithDate("").Length;
-            var indent = "";
+            Logging.Logger.Log("GPUs: " + Environment.NewLine);
 
-            for (var i = 0; i < indentation; i++)
-            {
-                indent += " ";
-            }
-
-            var log = Logger.BuildLog("GPUs: " + Environment.NewLine);
-
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(
+            var searcher = new ManagementObjectSearcher(
                 "select * from Win32_VideoController");
             var props = searcher.Get();
 
-            foreach (ManagementBaseObject prop in props)
+            foreach (var prop in props)
             {
                 var name = "";
                 var horizontalRes = "";
                 var verticalRes = "";
                 var vram = "";
 
-                foreach (PropertyData propProperty in prop.Properties)
-                {
+                foreach (var propProperty in prop.Properties)
                     switch (propProperty.Name)
                     {
                         case "Name":
@@ -380,18 +342,15 @@ namespace KCDModMerger
                             break;
                         }
                     }
-                }
 
-                log += indent + "Name: " + name + Environment.NewLine;
-                log += indent + "Resolution: " + horizontalRes + "x" + verticalRes + Environment.NewLine;
-                log += indent + "VRAM: " + vram + Environment.NewLine;
+                Logging.Logger.Log("Name: " + name + Environment.NewLine);
+                Logging.Logger.Log("Resolution: " + horizontalRes + "x" + verticalRes + Environment.NewLine);
+                Logging.Logger.Log("VRAM: " + vram + Environment.NewLine);
             }
-
-            return log;
         }
 
         /// <summary>
-        /// Converts to highest.
+        ///     Converts to highest.
         /// </summary>
         /// <param name="bytes">The bytes.</param>
         /// <returns></returns>
@@ -399,19 +358,19 @@ namespace KCDModMerger
         {
             var kb = bytes / 1024f;
 
-            if (kb > 1)
+            if (kb >= 1)
             {
                 var mb = kb / 1024f;
 
-                if (mb > 1)
+                if (mb >= 1)
                 {
                     var gb = mb / 1024f;
 
-                    if (gb > 1)
+                    if (gb >= 1)
                     {
                         var tb = gb / 1024f;
 
-                        if (tb > 1)
+                        if (tb >= 1)
                             return Math.Round(tb) + " TiB"
                                 ;
 
@@ -428,7 +387,7 @@ namespace KCDModMerger
         }
 
         /// <summary>
-        /// Gets the dot net verson.
+        ///     Gets the dot net verson.
         /// </summary>
         /// <returns></returns>
         internal static string GetDotNetVerson()

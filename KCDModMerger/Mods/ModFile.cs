@@ -18,6 +18,16 @@ namespace KCDModMerger.Mods
     [LogInterceptor]
     public class ModFile
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ModFile"/> class.
+        /// </summary>
+        /// <param name="modName">Name of the mod.</param>
+        /// <param name="fileName">Name of the file.</param>
+        /// <param name="pakFileName">Name of the pak file.</param>
+        /// <param name="pakFilePath">The pak file path.</param>
+        /// <param name="isVanilla">if set to <c>true</c> [is vanilla].</param>
+        /// <param name="isLocalization">if set to <c>true</c> [is localization].</param>
+        /// <param name="isExtracted">if set to <c>true</c> [is extracted].</param>
         public ModFile(string modName, string fileName, string pakFileName, string pakFilePath, bool isVanilla,
             bool isLocalization, bool isExtracted = false)
         {
@@ -69,6 +79,7 @@ namespace KCDModMerger.Mods
         /// <returns>
         ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
         /// </returns>
+        [Log]
         public override bool Equals(object obj)
         {
             if (obj.GetType() == GetType())
@@ -91,6 +102,7 @@ namespace KCDModMerger.Mods
         /// <returns>
         /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
         /// </returns>
+        [Log]
         public override int GetHashCode()
         {
             var hashCode = -1445040340;
@@ -109,6 +121,7 @@ namespace KCDModMerger.Mods
         /// <returns>
         /// A <see cref="System.String" /> that represents this instance.
         /// </returns>
+        [Log]
         public override string ToString()
         {
             return JsonConvert.SerializeObject(this);

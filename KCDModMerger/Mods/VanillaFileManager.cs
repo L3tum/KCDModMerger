@@ -148,7 +148,7 @@ namespace KCDModMerger.Mods
                             var destFolder = ModManager.directoryManager.CreateDirectories(file);
 
                             using (FileStream destFile =
-                                File.Open(destFolder + "\\" + file.FileName, FileMode.OpenOrCreate))
+                                File.Open(destFolder + "\\" + file.FileName.Split('/').Last(), FileMode.OpenOrCreate))
                             {
                                 using (Stream srcFile = zippedFile.Open())
                                 {
@@ -156,7 +156,7 @@ namespace KCDModMerger.Mods
                                 }
                             }
 
-                            return destFolder + "\\" + file.FileName;
+                            return destFolder + "\\" + file.FileName.Split('/').Last();
                         }
                     }
                 }
@@ -185,7 +185,7 @@ namespace KCDModMerger.Mods
                         {
                             var destFolder = ModManager.directoryManager.CreateDirectories(file);
 
-                            using (FileStream destFile = File.Open(destFolder + "\\" + fileName,
+                            using (FileStream destFile = File.Open(destFolder + "\\" + file.FileName.Split('/').Last(),
                                 FileMode.OpenOrCreate))
                             {
                                 using (Stream srcFile = zippedFile.Open())
@@ -194,7 +194,7 @@ namespace KCDModMerger.Mods
                                 }
                             }
 
-                            return destFolder + "\\" + fileName;
+                            return destFolder + "\\" + file.FileName.Split('/').Last();
                         }
                     }
                 }

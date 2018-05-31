@@ -2,5 +2,8 @@ KCDModMerger/obj/**
 .vs/**
 packages/**
 KCDModMerger/bin/Debug/**
-KCDModMerger/bin/Release/Log.txt
-KCDModMerger/bin/Release/KCDModMerger.log
+
+**/KCDModMerger.log
+
+KCDModMerger.Tests/bin/Debug/**
+KCDModMerger.Tests/obj/**

@@ -116,7 +116,6 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="Logger.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\LogEntry.cs" />
     <Compile Include="Logging\Logger.cs" />

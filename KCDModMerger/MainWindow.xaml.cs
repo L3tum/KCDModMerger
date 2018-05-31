@@ -245,7 +245,9 @@ namespace KCDModMerger
         {
             Logging.Logger.Log("Starting to merge");
 
-            ModMana.MergeFiles(copyAllFilesButton.IsChecked ?? false, deleteOldFilesButton.IsChecked ?? false);
+            var copyFiles = copyAllFilesButton.Dispatcher.InvokeAsync(() => { return copyAllFilesButton.IsChecked ?? false;}).Result;
+            var deleteOld = copyAllFilesButton.Dispatcher.InvokeAsync(() => { return deleteOldFilesButton.IsChecked ?? false;}).Result;
+            ModMana.MergeFiles(copyFiles, deleteOld);
 
             Logging.Logger.Log("Finished Merge Job!");
         }
@@ -294,9 +296,29 @@ namespace KCDModMerger
         /// </summary>
         private void UpdateUI()
         {
+            var selectedEntryFile = "";
+            var selectedEntryMod = "";
+
+            var temp = conflictFilesList.SelectedItem;
+
+            if (temp != null)
+            {
+                selectedEntryFile = (string) temp;
+            }
+
+            temp = modList.SelectedItem;
+
+            if (temp != null)
+            {
+                selectedEntryMod = ((ItemVM)temp).Text;
+            }
+
+            viewModel.ConflictingModsList.Clear();
             viewModel.ConflictingFilesList.Clear();
 
-            foreach (var selectedFile in ModMana.Conflicts.Keys) viewModel.ConflictingFilesList.Add(selectedFile);
+            var files = ModMana.Conflicts.Where(entry => entry.Value.Count > 1);
+
+            foreach (var selectedFile in files) viewModel.ConflictingFilesList.Add(selectedFile.Key);
 
             Logging.Logger.Log("Updated Conflicts to " + viewModel.ConflictingFilesList.Count + " different files!");
 
@@ -310,6 +332,25 @@ namespace KCDModMerger
             foreach (var modManaMod in ModMana.Mods)
                 viewModel.ModListItems.Add(new ItemVM(modManaMod.manifest.DisplayName,
                     modManaMod.Status == ModStatus.Disabled ? Colors.Red : Colors.Green));
+
+            var index = ModMana.Mods.FindIndex(entry => entry.manifest.DisplayName == selectedEntryMod);
+
+            if (index != -1 && index < viewModel.ModListItems.Count && viewModel.ModListItems[index].Text == selectedEntryMod)
+            {
+                modList.SelectedIndex = index;
+            }
+
+            index = ModMana.Conflicts.Keys.ToList().FindIndex(entry => entry == selectedEntryFile);
+
+            if (index != -1 && index < viewModel.ConflictingFilesList.Count && viewModel.ConflictingFilesList[index] == selectedEntryFile)
+            {
+                conflictFilesList.SelectedIndex = index;
+
+                foreach (string s in ModMana.Conflicts[selectedEntryFile])
+                {
+                    viewModel.ConflictingModsList.Add(s);
+                }
+            }
         }
 
         /// <summary>
