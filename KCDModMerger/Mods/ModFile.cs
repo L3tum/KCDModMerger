@@ -54,8 +54,10 @@ namespace KCDModMerger.Mods
         /// <summary>
         /// Deletes this instance.
         /// </summary>
+        [Log]
         public void Delete()
         {
+            Logging.Logger.Log("Deleting " + DisplayName + "(" + ModName + ")");
             var file = PakFilePath + "\\" + PakFileName;
 
             if (File.Exists(file))

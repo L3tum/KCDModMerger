@@ -7,3 +7,4 @@ KCDModMerger/bin/Debug/**
 
 KCDModMerger.Tests/bin/Debug/**
 KCDModMerger.Tests/obj/**
+KCDModMerger/bin/Release/VanillaFiles.json

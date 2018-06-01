@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-run id="2" testcasecount="8" result="Passed" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="11" engine-version="3.8.0.0" clr-version="4.0.30319.42000" start-time="2018-05-31 14:35:24Z" end-time="2018-05-31 14:35:27Z" duration="2.284431">
+  <command-line><![CDATA["C:\Users\Tom\source\repos\KCDModMerger\KCDModMerger.Tests\bin\Release\..\..\..\packages\NUnit.ConsoleRunner.3.8.0\tools\nunit3-console.exe" KCDModMerger.Tests.dll]]></command-line>
+  <test-suite type="Assembly" id="0-1011" name="KCDModMerger.Tests.dll" fullname="C:\Users\Tom\source\repos\KCDModMerger\KCDModMerger.Tests\bin\Release\KCDModMerger.Tests.dll" runstate="Runnable" testcasecount="8" result="Passed" start-time="2018-05-31 14:35:26Z" end-time="2018-05-31 14:35:27Z" duration="0.450744" total="8" passed="8" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="11">
+    <environment framework-version="3.10.1.0" clr-version="4.0.30319.42000" os-version="Microsoft Windows NT 10.0.16299.0" platform="Win32NT" cwd="C:\Users\Tom\source\repos\KCDModMerger\KCDModMerger.Tests\bin\Release" machine-name="PCTOM" user="Tom" user-domain="PCTOM" culture="de-DE" uiculture="de-DE" os-architecture="x64" />
+    <settings>
+      <setting name="DisposeRunners" value="True" />
+      <setting name="WorkDirectory" value="C:\Users\Tom\source\repos\KCDModMerger\KCDModMerger.Tests\bin\Release" />
+      <setting name="ImageRuntimeVersion" value="4.0.30319" />
+      <setting name="ImageTargetFrameworkName" value=".NETFramework,Version=v4.6.1" />
+      <setting name="ImageRequiresX86" value="False" />
+      <setting name="ImageRequiresDefaultAppDomainAssemblyResolver" value="False" />
+      <setting name="NumberOfTestWorkers" value="8" />
+    </settings>
+    <properties>
+      <property name="_PID" value="11628" />
+      <property name="_APPDOMAIN" value="domain-" />
+    </properties>
+    <test-suite type="TestSuite" id="0-1012" name="KCDModMerger" fullname="KCDModMerger" runstate="Runnable" testcasecount="8" result="Passed" start-time="2018-05-31 14:35:26Z" end-time="2018-05-31 14:35:27Z" duration="0.435761" total="8" passed="8" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="11">
+      <test-suite type="TestSuite" id="0-1013" name="Tests" fullname="KCDModMerger.Tests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2018-05-31 14:35:26Z" end-time="2018-05-31 14:35:27Z" duration="0.435208" total="8" passed="8" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="11">
+        <test-suite type="TestFixture" id="0-1000" name="Utilties" fullname="KCDModMerger.Tests.Utilties" classname="KCDModMerger.Tests.Utilties" runstate="Runnable" testcasecount="8" result="Passed" start-time="2018-05-31 14:35:26Z" end-time="2018-05-31 14:35:27Z" duration="0.432868" total="8" passed="8" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="11">
+          <test-suite type="ParameterizedMethod" id="0-1006" name="ConvertToHighest" fullname="KCDModMerger.Tests.Utilties.ConvertToHighest" classname="KCDModMerger.Tests.Utilties" runstate="Runnable" testcasecount="5" result="Passed" start-time="2018-05-31 14:35:26Z" end-time="2018-05-31 14:35:27Z" duration="0.298026" total="5" passed="5" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="5">
+            <test-case id="0-1001" name="ConvertToHighest(1L,&quot;1 Bytes&quot;)" fullname="KCDModMerger.Tests.Utilties.ConvertToHighest(1L,&quot;1 Bytes&quot;)" methodname="ConvertToHighest" classname="KCDModMerger.Tests.Utilties" runstate="Runnable" seed="1146178859" result="Passed" start-time="2018-05-31 14:35:26Z" end-time="2018-05-31 14:35:27Z" duration="0.287661" asserts="1" />
+            <test-case id="0-1002" name="ConvertToHighest(1024L,&quot;1 KiB&quot;)" fullname="KCDModMerger.Tests.Utilties.ConvertToHighest(1024L,&quot;1 KiB&quot;)" methodname="ConvertToHighest" classname="KCDModMerger.Tests.Utilties" runstate="Runnable" seed="1672039220" result="Passed" start-time="2018-05-31 14:35:27Z" end-time="2018-05-31 14:35:27Z" duration="0.000306" asserts="1" />
+            <test-case id="0-1003" name="ConvertToHighest(1048576L,&quot;1 MiB&quot;)" fullname="KCDModMerger.Tests.Utilties.ConvertToHighest(1048576L,&quot;1 MiB&quot;)" methodname="ConvertToHighest" classname="KCDModMerger.Tests.Utilties" runstate="Runnable" seed="296059690" result="Passed" start-time="2018-05-31 14:35:27Z" end-time="2018-05-31 14:35:27Z" duration="0.000121" asserts="1" />
+            <test-case id="0-1004" name="ConvertToHighest(1073741824L,&quot;1 GiB&quot;)" fullname="KCDModMerger.Tests.Utilties.ConvertToHighest(1073741824L,&quot;1 GiB&quot;)" methodname="ConvertToHighest" classname="KCDModMerger.Tests.Utilties" runstate="Runnable" seed="1383838046" result="Passed" start-time="2018-05-31 14:35:27Z" end-time="2018-05-31 14:35:27Z" duration="0.000096" asserts="1" />
+            <test-case id="0-1005" name="ConvertToHighest(1099511627776L,&quot;1 TiB&quot;)" fullname="KCDModMerger.Tests.Utilties.ConvertToHighest(1099511627776L,&quot;1 TiB&quot;)" methodname="ConvertToHighest" classname="KCDModMerger.Tests.Utilties" runstate="Runnable" seed="697394486" result="Passed" start-time="2018-05-31 14:35:27Z" end-time="2018-05-31 14:35:27Z" duration="0.000100" asserts="1" />
+          </test-suite>
+          <test-suite type="ParameterizedMethod" id="0-1010" name="CopyFile" fullname="KCDModMerger.Tests.Utilties.CopyFile" classname="KCDModMerger.Tests.Utilties" runstate="Runnable" testcasecount="2" result="Passed" start-time="2018-05-31 14:35:27Z" end-time="2018-05-31 14:35:27Z" duration="0.025866" total="2" passed="2" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="5">
+            <test-case id="0-1008" name="CopyFile(True)" fullname="KCDModMerger.Tests.Utilties.CopyFile(True)" methodname="CopyFile" classname="KCDModMerger.Tests.Utilties" runstate="Runnable" seed="1173246981" result="Passed" start-time="2018-05-31 14:35:27Z" end-time="2018-05-31 14:35:27Z" duration="0.022300" asserts="3" />
+            <test-case id="0-1009" name="CopyFile(False)" fullname="KCDModMerger.Tests.Utilties.CopyFile(False)" methodname="CopyFile" classname="KCDModMerger.Tests.Utilties" runstate="Runnable" seed="1859388460" result="Passed" start-time="2018-05-31 14:35:27Z" end-time="2018-05-31 14:35:27Z" duration="0.003401" asserts="2" />
+          </test-suite>
+          <test-case id="0-1007" name="DeleteFolder" fullname="KCDModMerger.Tests.Utilties.DeleteFolder" methodname="DeleteFolder" classname="KCDModMerger.Tests.Utilties" runstate="Runnable" seed="2113489428" result="Passed" start-time="2018-05-31 14:35:27Z" end-time="2018-05-31 14:35:27Z" duration="0.104386" asserts="1" />
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html data-ng-app="coverageApp">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE,chrome=1" />
+<link href="data:image/png;base64,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" rel="icon" type="image/x-icon" />
+<title>Summary - Coverage Report</title>
+<link rel="stylesheet" type="text/css" href="report.css" />
+</head><body data-ng-controller="SummaryViewCtrl"><div class="container"><div class="containerleft">
+<h1>Summary</h1>
+<table class="overview table-fixed">
+<colgroup>
+<col class="column135" />
+<col />
+</colgroup>
+<tbody>
+<tr><th>Generated on:</th><td>31.05.2018 - 16:35:29</td></tr>
+<tr><th>Parser:</th><td>OpenCoverParser</td></tr>
+<tr><th>Assemblies:</th><td>1</td></tr>
+<tr><th>Classes:</th><td>20</td></tr>
+<tr><th>Files:</th><td>20</td></tr>
+<tr><th>Covered lines:</th><td>58</td></tr>
+<tr><th>Uncovered lines:</th><td>1662</td></tr>
+<tr><th>Coverable lines:</th><td>1720</td></tr>
+<tr><th>Total lines:</th><td>5093</td></tr>
+<tr><th>Line coverage:</th><td>3.3%</td></tr>
+<tr><th>Branch coverage:</th><td>2%</td></tr>
+</tbody>
+</table>
+<h1>Risk Hotspots</h1>
+<div data-ng-if="riskHotspots.length > 0" data-reactive-risk-hotspot-table data-risk-hotspots="riskHotspots" data-risk-hotspot-metrics="riskHotspotMetrics"></div>
+<table data-ng-if="false" class="overview table-fixed stripped">
+<colgroup>
+<col />
+<col />
+<col />
+<col class="column105" />
+<col class="column105" />
+</colgroup>
+<thead><tr><th>Assembly</th>
+<th>Class</th>
+<th>Method</th>
+<th class="right">Cyclomatic complexity <a href="https://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon-info-circled"></i></a></th>
+<th class="right">NPath complexity <a href="https://modess.io/npath-complexity-cyclomatic-complexity-explained"><i class="icon-info-circled"></i></a></th>
+</tr></thead>
+<tbody>
+<tr>
+<td>KCDModMerger</td>
+<td><a href="KCDModMerger_Utilities.htm">KCDModMerger.Utilities</a></td>
+<td>GetVersionFromRegistry()</td>
+<td class="right lightred">19</td>
+<td class="right lightred">131072</td>
+</tr>
+<tr>
+<td>KCDModMerger</td>
+<td><a href="KCDModMerger_ModManifest.htm">KCDModMerger.Mods.ModManifest</a></td>
+<td>ReadManifest()</td>
+<td class="right lightred">71</td>
+<td class="right lightred">16384</td>
+</tr>
+<tr>
+<td>KCDModMerger</td>
+<td><a href="KCDModMerger_MainWindow.htm">KCDModMerger.MainWindow</a></td>
+<td>UpdateUI()</td>
+<td class="right lightred">16</td>
+<td class="right lightred">8192</td>
+</tr>
+<tr>
+<td>KCDModMerger</td>
+<td><a href="KCDModMerger_LogEntry.htm">KCDModMerger.Logging.LogEntry</a></td>
+<td>CheckForExclamation()</td>
+<td class="right lightgreen">13</td>
+<td class="right lightred">4096</td>
+</tr>
+<tr>
+<td>KCDModMerger</td>
+<td><a href="KCDModMerger_ModManager.htm">KCDModMerger.ModManager</a></td>
+<td>MergeFiles(...)</td>
+<td class="right lightgreen">13</td>
+<td class="right lightred">512</td>
+</tr>
+<tr>
+<td>KCDModMerger</td>
+<td><a href="KCDModMerger_ModManager.htm">KCDModMerger.ModManager</a></td>
+<td>ChangeModStatus(...)</td>
+<td class="right lightgreen">13</td>
+<td class="right lightred">512</td>
+</tr>
+<tr>
+<td>KCDModMerger</td>
+<td><a href="KCDModMerger_OSVersionInfo.htm">KCDModMerger.OSVersionInfo</a></td>
+<td>RegistryRead(...)</td>
+<td class="right lightgreen">10</td>
+<td class="right lightred">512</td>
+</tr>
+<tr>
+<td>KCDModMerger</td>
+<td><a href="KCDModMerger_LogEntry.htm">KCDModMerger.Logging.LogEntry</a></td>
+<td>BuildStringFromParameters()</td>
+<td class="right lightgreen">9</td>
+<td class="right lightred">256</td>
+</tr>
+<tr>
+<td>KCDModMerger</td>
+<td><a href="KCDModMerger_Utilities.htm">KCDModMerger.Utilities</a></td>
+<td>DeleteFolder(...)</td>
+<td class="right lightgreen">9</td>
+<td class="right lightred">256</td>
+</tr>
+<tr>
+<td>KCDModMerger</td>
+<td><a href="KCDModMerger_Utilities.htm">KCDModMerger.Utilities</a></td>
+<td>CheckFor45PlusVersion(...)</td>
+<td class="right lightgreen">9</td>
+<td class="right lightred">256</td>
+</tr>
+</tbody>
+</table>
+<h1>Coverage</h1>
+<div data-ng-if="coverageTableFilteringEnabled" data-reactive-coverage-table data-assemblies="assemblies" data-branch-coverage-available="branchCoverageAvailable"></div>
+<div data-ng-if="!coverageTableFilteringEnabled">
+<div class="ng-hide customizebox" data-ng-show="true"><input data-ng-click="enableCoverageTableFiltering()" value="Enable filtering" title="This may take some time since the report contains many classes." type="submit" /></div>
+</div>
+<table data-ng-if="!coverageTableFilteringEnabled" class="overview table-fixed stripped">
+<colgroup>
+<col />
+<col class="column90" />
+<col class="column105" />
+<col class="column100" />
+<col class="column70" />
+<col class="column60" />
+<col class="column112" />
+<col class="column60" />
+<col class="column112" />
+</colgroup>
+<thead><tr><th>Name</th><th class="right">Covered</th><th class="right">Uncovered</th><th class="right">Coverable</th><th class="right">Total</th><th class="center" colspan="2">Line coverage</th><th class="center" colspan="2">Branch coverage</th></tr></thead>
+<tbody>
+<tr><th>KCDModMerger</th><th class="right">58</th><th class="right">1662</th><th class="right">1720</th><th class="right">5093</th><th title="LineCoverage" class="right">3.3%</th><th><table class="coverage"><tr><td class="green covered3">&nbsp;</td><td class="red covered97">&nbsp;</td></tr></table></th><th class="right">2%</th><th><table class="coverage"><tr><td class="green covered2">&nbsp;</td><td class="red covered98">&nbsp;</td></tr></table></th></tr>
+<tr><td><a href="KCDModMerger_App.htm">KCDModMerger.App</a></td><td class="right">0</td><td class="right">27</td><td class="right">27</td><td class="right">84</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_Log.htm">KCDModMerger.Logging.Log</a></td><td class="right">0</td><td class="right">0</td><td class="right">0</td><td class="right">0</td><td title="MethodCoverage" class="right"></td><td><table class="coverage"><tr><td class="gray covered100">&nbsp;</td></tr></table></td><td class="right"></td><td><table class="coverage"><tr><td class="gray covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_LogEntry.htm">KCDModMerger.Logging.LogEntry</a></td><td class="right">14</td><td class="right">96</td><td class="right">110</td><td class="right">277</td><td title="LineCoverage" class="right">12.7%</td><td><table class="coverage"><tr><td class="green covered13">&nbsp;</td><td class="red covered87">&nbsp;</td></tr></table></td><td class="right">1.3%</td><td><table class="coverage"><tr><td class="green covered1">&nbsp;</td><td class="red covered99">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_Logger.htm">KCDModMerger.Logging.Logger</a></td><td class="right">17</td><td class="right">95</td><td class="right">112</td><td class="right">287</td><td title="LineCoverage" class="right">15.1%</td><td><table class="coverage"><tr><td class="green covered15">&nbsp;</td><td class="red covered85">&nbsp;</td></tr></table></td><td class="right">3.2%</td><td><table class="coverage"><tr><td class="green covered3">&nbsp;</td><td class="red covered97">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_LogInterceptor.htm">KCDModMerger.Logging.LogInterceptor</a></td><td class="right">0</td><td class="right">13</td><td class="right">13</td><td class="right">54</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_MainWindow.htm">KCDModMerger.MainWindow</a></td><td class="right">0</td><td class="right">303</td><td class="right">303</td><td class="right">861</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_ModManager.htm">KCDModMerger.ModManager</a></td><td class="right">0</td><td class="right">60</td><td class="right">60</td><td class="right">278</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_DirectoryManager.htm">KCDModMerger.Mods.DirectoryManager</a></td><td class="right">0</td><td class="right">77</td><td class="right">77</td><td class="right">198</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_LegacyModLoader.htm">KCDModMerger.Mods.LegacyModLoader</a></td><td class="right">0</td><td class="right">30</td><td class="right">30</td><td class="right">87</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_Mod.htm">KCDModMerger.Mods.Mod</a></td><td class="right">0</td><td class="right">55</td><td class="right">55</td><td class="right">256</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_ModFile.htm">KCDModMerger.Mods.ModFile</a></td><td class="right">0</td><td class="right">40</td><td class="right">40</td><td class="right">132</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_ModLoader.htm">KCDModMerger.Mods.ModLoader</a></td><td class="right">0</td><td class="right">15</td><td class="right">15</td><td class="right">58</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_ModManifest.htm">KCDModMerger.Mods.ModManifest</a></td><td class="right">0</td><td class="right">48</td><td class="right">48</td><td class="right">248</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_ModMerger.htm">KCDModMerger.Mods.ModMerger</a></td><td class="right">0</td><td class="right">116</td><td class="right">116</td><td class="right">325</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_VanillaFileManager.htm">KCDModMerger.Mods.VanillaFileManager</a></td><td class="right">0</td><td class="right">86</td><td class="right">86</td><td class="right">223</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_NativeMethods.htm">KCDModMerger.NativeMethods</a></td><td class="right">0</td><td class="right">0</td><td class="right">0</td><td class="right">0</td><td title="MethodCoverage" class="right"></td><td><table class="coverage"><tr><td class="gray covered100">&nbsp;</td></tr></table></td><td class="right"></td><td><table class="coverage"><tr><td class="gray covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_OSVersionInfo.htm">KCDModMerger.OSVersionInfo</a></td><td class="right">0</td><td class="right">372</td><td class="right">372</td><td class="right">1103</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_ItemVM.htm">KCDModMerger.UI.ItemVM</a></td><td class="right">0</td><td class="right">16</td><td class="right">16</td><td class="right">54</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_MainViewModel.htm">KCDModMerger.UI.MainViewModel</a></td><td class="right">0</td><td class="right">26</td><td class="right">26</td><td class="right">71</td><td title="LineCoverage" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="KCDModMerger_Utilities.htm">KCDModMerger.Utilities</a></td><td class="right">27</td><td class="right">187</td><td class="right">214</td><td class="right">497</td><td title="LineCoverage" class="right">12.6%</td><td><table class="coverage"><tr><td class="green covered13">&nbsp;</td><td class="red covered87">&nbsp;</td></tr></table></td><td class="right">13.9%</td><td><table class="coverage"><tr><td class="green covered14">&nbsp;</td><td class="red covered86">&nbsp;</td></tr></table></td></tr>
+</tbody>
+</table>
+<div class="footer">Generated by: ReportGenerator 3.1.2.0<br />31.05.2018 - 16:35:29<br /><a href="https://github.com/danielpalme/ReportGenerator">GitHub</a> | <a href="http://www.palmmedia.de">www.palmmedia.de</a></div></div></div>
+<script type="text/javascript" src="combined.js"></script>
+</body></html>

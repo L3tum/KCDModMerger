@@ -24,6 +24,7 @@ namespace KCDModMerger.Logging
         private static readonly StringBuilder sb = new StringBuilder();
         private static readonly Timer timer = new Timer(CheckMemUsage, null, 0, 1000 * 10);
         private static Task task;
+        private static CancellationTokenSource ts;
 
         internal static string LOG_FILE =
             Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) +
@@ -31,7 +32,7 @@ namespace KCDModMerger.Logging
 
         private static readonly List<LogEntry> final = new List<LogEntry>();
 
-        private static readonly BlockingCollection<LogEntry> bc = new BlockingCollection<LogEntry>();
+        private static BlockingCollection<LogEntry> bc = new BlockingCollection<LogEntry>();
 
         // Constructor create the thread that wait for work on .GetConsumingEnumerable()
         [Log]
@@ -42,32 +43,41 @@ namespace KCDModMerger.Logging
 
             AppDomain.CurrentDomain.UnhandledException += LogException;
 
-            task = Task.Factory.StartNew(() =>
-            {
-                foreach (LogEntry p in bc.GetConsumingEnumerable())
-                {
-                    lock (final)
-                    {
-                        if (p.ThreadName != "Main")
-                        {
-                            var lastEntry = final.FindLastIndex(entry => entry.ThreadName == p.ThreadName);
+            ts = new CancellationTokenSource();
+            CancellationToken ct = ts.Token;
+            task = Task.Factory.StartNew(Stringify, ct);
+        }
 
-                            if (lastEntry != -1 && lastEntry + 1 < final.Count)
-                            {
-                                final.Insert(lastEntry + 1, p);
-                            }
-                            else
-                            {
-                                final.Add(p);
-                            }
+        private static void Stringify()
+        {
+            foreach (LogEntry p in bc.GetConsumingEnumerable())
+            {
+                lock (final)
+                {
+                    if (p.ThreadName != "Main")
+                    {
+                        var lastEntry = final.FindLastIndex(entry => entry.ThreadName == p.ThreadName);
+
+                        if (lastEntry != -1 && lastEntry + 1 < final.Count)
+                        {
+                            final.Insert(lastEntry + 1, p);
                         }
                         else
                         {
                             final.Add(p);
                         }
                     }
+                    else
+                    {
+                        final.Add(p);
+                    }
                 }
-            });
+
+                if (ts.IsCancellationRequested)
+                {
+                    break;
+                }
+            }
         }
 
         /// <summary>
@@ -83,8 +93,6 @@ namespace KCDModMerger.Logging
         [Log]
         internal static void LogException(object sender, UnhandledExceptionEventArgs args)
         {
-            task.Wait(1000);
-
             var exception = (Exception) args.ExceptionObject;
 
             CreateExceptionString(exception);
@@ -107,12 +115,16 @@ namespace KCDModMerger.Logging
                 Settings.Default.Save();
             }
 
-            Finalize();
+            Finalizer();
         }
 
         [Log]
         internal static void LogToFile()
         {
+            bc.CompleteAdding();
+            ts.Cancel();
+            Stringify();
+
             lock (final)
             {
                 foreach (LogEntry logEntry in final)
@@ -123,16 +135,14 @@ namespace KCDModMerger.Logging
 
             File.AppendAllText(LOG_FILE, sb.ToString());
             sb.Clear();
+            bc = new BlockingCollection<LogEntry>();
         }
 
         [Log]
-        internal static void Finalize()
+        internal static void Finalizer()
         {
             timer.Dispose();
             Log("Stopping KCDModMerger!");
-            task.Wait(1000);
-            // Free the writing thread
-            bc.CompleteAdding();
             LogToFile();
             File.Delete(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "\\unrar.dll");
         }
@@ -173,6 +183,7 @@ namespace KCDModMerger.Logging
                 {
                     LogToFile();
                     final.Clear();
+                    task = Task.Factory.StartNew(Stringify);
                 }
             }
         }

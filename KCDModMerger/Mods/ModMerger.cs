@@ -6,12 +6,14 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Xml;
+using KCDModMerger.Logging;
 using KCDModMerger.Properties;
 
 #endregion
 
 namespace KCDModMerger.Mods
 {
+    [LogInterceptor]
     internal class ModMerger
     {
         private readonly string destPath;
@@ -64,12 +66,12 @@ namespace KCDModMerger.Mods
 
         private void WriteManifest()
         {
-            if (File.Exists(DirectoryManager.MERGED_MOD + "\\mod.manifest"))
+            if (File.Exists(destPath + "\\mod.manifest"))
             {
-                Directory.Delete(DirectoryManager.MERGED_MOD + "\\mod.manifest");
+                File.Delete(destPath + "\\mod.manifest");
             }
 
-            using (XmlWriter xml = XmlWriter.Create(DirectoryManager.MERGED_MOD + "\\mod.manifest"))
+            using (XmlWriter xml = XmlWriter.Create(destPath + "\\mod.manifest"))
             {
                 xml.WriteStartDocument();
                 xml.WriteStartElement("kcd_mod");
