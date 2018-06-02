@@ -122,6 +122,7 @@
     <Compile Include="Logging\LogInterceptor.cs" />
     <Compile Include="Mods\DirectoryManager.cs" />
     <Compile Include="Mods\LegacyModLoader.cs" />
+    <Compile Include="Mods\ModConfig.cs" />
     <Compile Include="Mods\ModFile.cs" />
     <Compile Include="Mods\ModLoader.cs" />
     <Compile Include="Mods\ModManifest.cs" />

@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -29,7 +28,10 @@ namespace KCDModMerger
         internal const string VERSION = "1.4 'Ariadnes Threads'";
         internal static DirectoryManager directoryManager;
         private readonly List<string> _mergedFiles = new List<string>();
-        internal readonly SortedDictionary<string, List<string>> Conflicts = new SortedDictionary<string, List<string>>();
+
+        internal readonly SortedDictionary<string, List<string>> Conflicts =
+            new SortedDictionary<string, List<string>>();
+
         internal readonly List<ModFile> ModFiles = new List<ModFile>();
         internal readonly List<Mod> Mods = new List<Mod>();
 
@@ -76,11 +78,11 @@ namespace KCDModMerger
             }
             else
             {
-                Logging.Logger.Log("Clearing previously found Stuff because root folder is not valid...");
+                Logger.Log("Clearing previously found Stuff because root folder is not valid...");
                 Conflicts.Clear();
                 ModFiles.Clear();
                 Mods.Clear();
-                Logging.Logger.Log("Cleared previously found Stuff!");
+                Logger.Log("Cleared previously found Stuff!");
 
                 OnPropertyChanged();
             }
@@ -92,7 +94,7 @@ namespace KCDModMerger
         {
             var filesToMerge = new List<ModFile>();
 
-            foreach (KeyValuePair<string, List<string>> conflict in Conflicts.Where(entry => entry.Value.Count > 1))
+            foreach (KeyValuePair<string, List<string>> conflict in Conflicts.Where(entry => entry.Value.Count > 1 && entry.Key != "Config"))
             {
                 foreach (string s in conflict.Value)
                 {
@@ -126,6 +128,44 @@ namespace KCDModMerger
                     modFile.Delete();
                 }
             }
+
+            var configsToMerge = new List<string>();
+            var configConflicts = Conflicts.Where(entry => entry.Key == "Config").ToList();
+
+            if (configConflicts.Any())
+            {
+                foreach (var conflict in configConflicts[0].Value)
+                {
+                    configsToMerge.Add(Mods.Find(entry => entry.manifest.DisplayName == conflict).config.file);
+                }
+            }
+
+            var baseFile = configsToMerge[0];
+            var output = directoryManager.kcdTempMerged + "\\mod.cfg";
+
+            foreach (string s in configsToMerge)
+            {
+                if (baseFile == s)
+                {
+                    File.Copy(s, output);
+                    baseFile = output;
+
+                    if (deleteOldFiles)
+                    {
+                        File.Delete(s);
+                    }
+                    continue;
+                }
+
+                Utilities.RunKDiff3("\"" + baseFile + "\" \"" + s + "\" -o \"" + output + "\" --auto");
+
+                if (deleteOldFiles)
+                {
+                    File.Delete(s);
+                }
+            }
+
+            File.Copy(output, directoryManager.kcdMerged + "\\mod.cfg", true);
         }
 
         internal void ChangeModStatus(string modName, ModStatus status)
@@ -138,7 +178,7 @@ namespace KCDModMerger
 
                 if (status == ModStatus.Disabled)
                 {
-                    foreach (ModFile modFile in ((IEnumerable<ModFile>)ModFiles).Reverse())
+                    foreach (ModFile modFile in ((IEnumerable<ModFile>) ModFiles).Reverse())
                     {
                         if (modFile.ModName == mod.manifest.DisplayName)
                         {
@@ -164,6 +204,23 @@ namespace KCDModMerger
                         else
                         {
                             Conflicts.Add(modDataFile.DisplayName, new List<string> {mod.manifest.DisplayName});
+                        }
+                    }
+
+                    foreach (Mod md in Mods)
+                    {
+                        if (mod.config.Equals(md.config))
+                        {
+                            if (Conflicts.ContainsKey("Config"))
+                            {
+                                Conflicts["Config"].Add(mod.manifest.DisplayName);
+                            }
+                            else
+                            {
+                                Conflicts.Add("Config", new List<string> {mod.manifest.DisplayName});
+                            }
+
+                            break;
                         }
                     }
                 }
@@ -217,7 +274,32 @@ namespace KCDModMerger
                     ModFiles.AddRange(mod.DataFiles);
                     Mods.Add(mod);
                 }
+
+                CheckConfigs();
             }).ContinueWith(t => { OnPropertyChanged(nameof(Conflicts)); });
+        }
+
+        private void CheckConfigs()
+        {
+            foreach (var t1 in Mods)
+            {
+                foreach (var t in Mods)
+                {
+                    if (t1.config.Equals(t.config))
+                    {
+                        if (Conflicts.ContainsKey("Config"))
+                        {
+                            Conflicts["Config"].Add(t1.manifest.DisplayName);
+                        }
+                        else
+                        {
+                            Conflicts.Add("Config", new List<string> {t1.manifest.DisplayName});
+                        }
+
+                        break;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -229,7 +311,7 @@ namespace KCDModMerger
         {
             if (e.PropertyName == "KCDPath")
             {
-                Logging.Logger.Log("KCD Root Path changed to " + Settings.Default.KCDPath, true);
+                Logger.Log("KCD Root Path changed to " + Settings.Default.KCDPath, true);
 
                 if (!MainWindow.isMerging)
                 {
@@ -237,7 +319,7 @@ namespace KCDModMerger
 
                     if (!isValid)
                     {
-                        Logging.Logger.Log("Chosen KCD Path is not the KCD root folder!");
+                        Logger.Log("Chosen KCD Path is not the KCD root folder!");
                         MessageBox.Show("Chosen Path is not the root folder of KCD! " + Environment.NewLine +
                                         "It should be something like ...\\KingdomComeDeliverance!", "KCDModMerger",
                             MessageBoxButton.OK);
@@ -245,7 +327,7 @@ namespace KCDModMerger
                 }
                 else
                 {
-                    Logging.Logger.Log("Update rejected because of ongoing merge operation!");
+                    Logger.Log("Update rejected because of ongoing merge operation!");
                     MessageBox.Show("Change will be applied after ongoing merge operation is finished!", "KCDModMerger",
                         MessageBoxButton.OK);
                 }
@@ -263,7 +345,7 @@ namespace KCDModMerger
             {
                 timer = new Timer(state =>
                 {
-                    Logging.Logger.Log("Notifying ModManager Listeners!");
+                    Logger.Log("Notifying ModManager Listeners!");
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
                     timer.Dispose();
                     timer = null;

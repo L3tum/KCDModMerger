@@ -24,6 +24,8 @@ namespace KCDModMerger.Mods
 
         internal ModManifest manifest;
 
+        internal ModConfig config;
+
         internal ModStatus Status;
 
 
@@ -34,6 +36,7 @@ namespace KCDModMerger.Mods
         public Mod(string folderName)
         {
             manifest = new ModManifest(folderName + "\\mod.manifest");
+            config = new ModConfig(folderName + "\\mod.cfg");
 
             if (folderName.Contains(ModManager.directoryManager.disabledModDirectory))
             {

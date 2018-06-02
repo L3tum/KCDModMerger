@@ -339,6 +339,10 @@ namespace KCDModMerger
             {
                 modList.SelectedIndex = index;
             }
+            else
+            {
+                modList.SelectedIndex = -1;
+            }
 
             index = ModMana.Conflicts.Keys.ToList().FindIndex(entry => entry == selectedEntryFile);
 
@@ -350,6 +354,10 @@ namespace KCDModMerger
                 {
                     viewModel.ConflictingModsList.Add(s);
                 }
+            }
+            else
+            {
+                conflictFilesList.SelectedIndex = -1;
             }
         }
 

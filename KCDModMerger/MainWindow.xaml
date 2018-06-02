@@ -81,7 +81,7 @@
                 </ScrollViewer.RenderTransform>
                 <TextBlock x:Name="modInfo" Grid.Column="1" TextWrapping="Wrap"
                            MaxWidth="200"
-                           RenderTransformOrigin="0.501,-0.137" Height="346" />
+                           RenderTransformOrigin="0.501,-0.137" Height="Auto" />
             </ScrollViewer>
             <ListView x:Name="conflictFilesList" Grid.Column="3" Margin="7.333,72,9.333,32.667" SelectionMode="Single"
                       SelectionChanged="ConflictFilesListSelectionChanged"

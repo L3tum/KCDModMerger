@@ -60,6 +60,7 @@ namespace KCDModMerger.Tests
             }
             else
             {
+                FileAssert.Exists(src);
                 File.Delete(src);
             }
 

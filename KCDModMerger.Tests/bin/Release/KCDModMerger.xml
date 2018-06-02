@@ -123,6 +123,15 @@
             </summary>
             <param name="file">The file.</param>
         </member>
+        <member name="M:KCDModMerger.Mods.ModConfig.Equals(System.Object)">
+            <summary>
+                Determines whether the specified <see cref="T:System.Object" />, is equal to this instance.
+            </summary>
+            <param name="obj">The <see cref="T:System.Object" /> to compare with this instance.</param>
+            <returns>
+                <c>true</c> if the specified <see cref="T:System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+            </returns>
+        </member>
         <member name="T:KCDModMerger.Mods.ModFile">
             <summary>
             ModFile class
